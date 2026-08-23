@@ -54,26 +54,26 @@ def compute_ensemble_risk(
     composite_score = w_merton * dd + w_altman * z_score
     
     if ensemble_pd < 0.01:
-        risk_tier = 'Low'
+        risk_tier = 'LOW'
     elif ensemble_pd < 0.05:
-        risk_tier = 'Medium'
+        risk_tier = 'MEDIUM'
     elif ensemble_pd < 0.15:
-        risk_tier = 'High'
+        risk_tier = 'HIGH'
     else:
-        risk_tier = 'Critical'
+        risk_tier = 'CRITICAL'
         
     # Check if models agree on risk tier
     def get_tier(pd_val: float) -> str:
-        if pd_val < 0.01: return 'Low'
-        if pd_val < 0.05: return 'Medium'
-        if pd_val < 0.15: return 'High'
-        return 'Critical'
+        if pd_val < 0.01: return 'LOW'
+        if pd_val < 0.05: return 'MEDIUM'
+        if pd_val < 0.15: return 'HIGH'
+        return 'CRITICAL'
         
     merton_tier = get_tier(merton_pd)
     altman_tier = get_tier(altman_pd_proxy)
     
     models_agree = (merton_tier == altman_tier)
-    confidence = 'High' if models_agree else 'Low'
+    confidence = 0.9 if models_agree else 0.4
     
     logger.info(f"Ensemble risk: PD={ensemble_pd:.4f}, Tier={risk_tier}, Agree={models_agree}")
     

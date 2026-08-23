@@ -111,7 +111,7 @@ class DDCalibrator:
         dd_arr = np.asarray(dd)
         neg_dd = -dd_arr
         
-        preds = self.model.predict(if_else(np.isscalar(dd), [neg_dd], neg_dd))
+        preds = self.model.predict([neg_dd] if np.isscalar(dd) else neg_dd)
         
         if np.isscalar(dd):
             return float(preds[0])

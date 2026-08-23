@@ -30,8 +30,9 @@ class MertonResult(BaseModel):
     DD_rw: float = Field(..., description="Real-world distance to default")
     PD_rn: float = Field(..., description="Risk-neutral probability of default")
     PD_rw: float = Field(..., description="Real-world probability of default")
+    PD_calibrated: Optional[float] = Field(None, description="Calibrated empirical expected default frequency (EDF)")
     V_current: float = Field(..., description="Current implied asset value")
-    D: float = Field(..., description="Default point (Debt threshold)")
+    D: Optional[float] = Field(None, description="Default point (Debt threshold)")
     iterations: float = Field(..., description="Number of iterations to converge")
     mu_rw: float = Field(..., description="Real-world asset drift")
 

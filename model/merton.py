@@ -4,6 +4,11 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 from scipy.optimize import brentq
+from model.calibration import DDCalibrator
+
+# Initialize calibrator once globally for performance
+_CALIBRATOR = DDCalibrator()
+_CALIBRATOR.fit_synthetic()
 
 logger = logging.getLogger(__name__)
 
@@ -285,6 +290,12 @@ def run_single_firm(
     # Term structure
     pd_term_structure = compute_pd_term_structure(V_current, D, sigma_V, mu_rw)
 
+    try:
+        pd_calibrated = _CALIBRATOR.predict(dd_rw)
+    except Exception as e:
+        print("CALIBRATOR ERROR:", e)
+        pd_calibrated = None
+
     return {
         "asset_series": asset_series,
         "sigma_V": sigma_V,
@@ -292,6 +303,7 @@ def run_single_firm(
         "DD_rw": dd_rw,
         "PD_rn": pd_rn,
         "PD_rw": pd_rw,
+        "PD_calibrated": float(pd_calibrated) if pd_calibrated is not None else None,
         "dd_timeseries": dd_timeseries,
         "pd_term_structure": pd_term_structure,
         "iterations": n_iter,

@@ -135,3 +135,26 @@ class SECEdgarClient:
         except Exception as e:
             logger.error(f"Error extracting debt data for {ticker}: {e}")
             raise
+
+    def fetch_financial_data(self, ticker: str, tags_dict: Dict[str, list]) -> dict:
+        """Fetch multiple financial metrics using a dict of fallback tags."""
+        try:
+            cik = self.get_cik_from_ticker(ticker)
+            facts = self.fetch_company_facts(cik)
+            
+            result = {}
+            for metric, tags in tags_dict.items():
+                value = None
+                for tag in tags:
+                    val = self._get_latest_value(facts, tag)
+                    if val is not None:
+                        value = val
+                        break
+                if value is None:
+                    logger.warning(f"Could not find metric {metric} for {ticker} using tags {tags}")
+                result[metric] = value
+                
+            return result
+        except Exception as e:
+            logger.error(f"Error fetching financial data for {ticker}: {e}")
+            raise
