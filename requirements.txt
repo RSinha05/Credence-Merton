@@ -31,3 +31,4 @@ scikit-learn>=1.3.0
 xgboost>=2.0.0
 arch>=6.2.0                  # For GARCH(1,1) equity volatility forecasting
 tslearn>=0.6.3               # For DTW + K-Means time-series trajectory clustering
+pyyaml
