@@ -79,3 +79,30 @@ class HealthResponse(BaseModel):
 class ErrorResponse(BaseModel):
     detail: str = Field(..., description="Error message")
     error_code: str = Field(..., description="Specific error code identifier")
+
+# --- Retail Mortgage Risk Schemas ---
+
+class RetailLoanRequest(BaseModel):
+    loan_id: str = Field(..., description="Unique loan identifier")
+    fico_score: float = Field(..., description="FICO credit score (300-850)")
+    ltv: float = Field(..., description="Loan to Value ratio (e.g. 80.0)")
+    dti: float = Field(..., description="Debt to Income ratio (e.g. 35.0)")
+    loan_amount: float = Field(..., description="Original loan amount")
+    interest_rate: float = Field(..., description="Annual interest rate (e.g. 0.05 for 5%)")
+    term_months: int = Field(360, description="Loan term in months")
+    months_seasoned: int = Field(..., description="Number of months since origination")
+
+class RetailPortfolioRequest(BaseModel):
+    loans: List[RetailLoanRequest] = Field(..., description="List of retail loans to analyze")
+
+class RetailLoanResponse(BaseModel):
+    loan_id: str
+    pd: float = Field(..., description="Probability of Default (PD)")
+    lgd: float = Field(..., description="Loss Given Default (LGD)")
+    ead: float = Field(..., description="Exposure at Default (EAD)")
+    expected_loss: float = Field(..., description="Expected Loss (PD * LGD * EAD)")
+
+class RetailPortfolioResponse(BaseModel):
+    portfolio_total_ead: float
+    portfolio_expected_loss: float
+    loan_results: List[RetailLoanResponse]

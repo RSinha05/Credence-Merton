@@ -14,7 +14,7 @@ except ImportError:
     API_VERSION = "1.0.0"
     API_DESCRIPTION = "API for Credit Risk Engine"
 
-from api.routes import health, corporate
+from api.routes import health, corporate, retail
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(corporate.router)
+app.include_router(retail.router)
 
 @app.on_event("startup")
 async def startup_event():
