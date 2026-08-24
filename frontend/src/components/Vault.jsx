@@ -3,7 +3,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Lock, Download, ArrowUpRight, X, KeyRound } from "lucide-react";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = `${"http://127.0.0.1:8000"}/api`;
 const TOKEN_KEY = "aurelis_vault_grant";
 
 function loadGrant() {
