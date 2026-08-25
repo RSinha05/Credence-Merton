@@ -54,7 +54,7 @@ export default function Header() {
             data-testid="header-cta"
             className="btn-primary"
           >
-            Blackswan Nova
+            Explore the Engine
           </a>
         </div>
 
@@ -90,7 +90,7 @@ export default function Header() {
               onClick={() => setOpen(false)}
               className="btn-primary text-center"
             >
-              Blackswan Nova
+              Explore the Engine
             </a>
           </div>
         </div>
