@@ -40,6 +40,53 @@ export default function Dashboard() {
     }
   };
 
+  const [corporateTicker, setCorporateTicker] = useState("");
+  const [corporateResult, setCorporateResult] = useState(null);
+  const [corporateLoading, setCorporateLoading] = useState(false);
+
+  const analyzeCorporate = async (e) => {
+    e.preventDefault();
+    if (!corporateTicker) return;
+    setCorporateLoading(true);
+    setError(null);
+    setCorporateResult(null);
+    try {
+      const payload = { ticker: corporateTicker.toUpperCase(), time_horizon: 1.0, include_altman: true };
+      const res = await axios.post(`http://127.0.0.1:8000/api/v1/risk/corporate/${corporateTicker.toUpperCase()}`, payload);
+      setCorporateResult(res.data);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to analyze corporate asset.");
+    } finally {
+      setCorporateLoading(false);
+    }
+  };
+
+  const renderCorporate = () => {
+    if (!corporateResult) return (
+      <div className="flex flex-col items-center justify-center h-full text-ivory/30 pt-20">
+        <Activity size={48} className="mb-4 opacity-50" />
+        <p className="text-xl font-serif">Enter a ticker to run the Ensemble Early Warning System.</p>
+      </div>
+    );
+
+    const { merton, altman, ensemble } = corporateResult;
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <MetricCard title="Ensemble PD (1Y)" value={`${(ensemble.ensemble_pd * 100).toFixed(2)}%`} icon={<Target />} color="text-red-400" />
+          <MetricCard title="Risk Tier" value={ensemble.risk_tier} icon={<Shield />} color={ensemble.risk_tier === "HIGH" ? "text-red-400" : "text-gold"} />
+          <MetricCard title="Altman Z-Score" value={altman?.z_score?.toFixed(2) || "N/A"} icon={<Activity />} color={altman?.z_score < 1.8 ? "text-red-400" : "text-emerald-400"} />
+          <MetricCard title="Z-Score Zone" value={altman?.z_zone || "N/A"} icon={<AlertTriangle />} />
+        </div>
+        <div className="p-6 bg-onyx-900/50 border border-white/5 text-sm text-ivory/70 leading-relaxed">
+          <strong>Ensemble Agreement:</strong> {ensemble.models_agree ? "Yes" : "No"} <br/>
+          <strong>Confidence Score:</strong> {(ensemble.confidence * 100).toFixed(1)}% <br/>
+          <strong>Analysis:</strong> The ensemble model blends the structural Merton distance-to-default implied probability with the fundamental accounting-based Altman Z-Score probability proxy.
+        </div>
+      </motion.div>
+    );
+  };
+
   const analyzeTicker = async (e) => {
     e.preventDefault();
     if (!ticker) return;
@@ -181,7 +228,9 @@ export default function Dashboard() {
           <span className="text-sm tracking-[0.2em] uppercase">Back to Hub</span>
         </Link>
         <div className="text-xl font-serif tracking-widest text-gold uppercase flex items-center gap-6">
-          <button onClick={() => setActiveTab('multi-asset')} className={`transition-colors ${activeTab === 'multi-asset' ? 'text-gold' : 'text-ivory/30 hover:text-ivory/60'}`}>Multi-Asset Engine</button>
+          <button onClick={() => setActiveTab('multi-asset')} className={`transition-colors ${activeTab === 'multi-asset' ? 'text-gold' : 'text-ivory/30 hover:text-ivory/60'}`}>Multi-Asset & NLP</button>
+          <span className="text-ivory/10">|</span>
+          <button onClick={() => setActiveTab('corporate')} className={`transition-colors ${activeTab === 'corporate' ? 'text-gold' : 'text-ivory/30 hover:text-ivory/60'}`}>Corporate EWS</button>
           <span className="text-ivory/10">|</span>
           <button onClick={() => setActiveTab('retail')} className={`transition-colors ${activeTab === 'retail' ? 'text-gold' : 'text-ivory/30 hover:text-ivory/60'}`}>Retail Credit</button>
         </div>
@@ -233,6 +282,41 @@ export default function Dashboard() {
                 </div>
                 {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
                 {renderRetail()}
+              </>
+            )}
+
+            {activeTab === 'corporate' && (
+              <>
+                <div className="mb-12">
+                  <h1 className="text-5xl font-serif mb-4">Corporate EWS</h1>
+                  <p className="text-ivory/50">Early Warning System using Ensemble (Merton + Altman Z-Score) for deep corporate distress analysis.</p>
+                </div>
+
+                <form onSubmit={analyzeCorporate} className="relative max-w-xl mb-12">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-ivory/30">
+                    <Search size={20} />
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full bg-onyx-900 border border-white/10 rounded-none py-4 pl-12 pr-32 text-lg focus:outline-none focus:border-gold transition-colors text-ivory uppercase"
+                    placeholder="E.G. TSLA, NVDA"
+                    value={corporateTicker}
+                    onChange={(e) => setCorporateTicker(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    disabled={corporateLoading}
+                    className="absolute inset-y-0 right-0 px-6 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50"
+                  >
+                    {corporateLoading ? "..." : "Analyze"}
+                  </button>
+                </form>
+
+                {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
+                
+                <div className="flex-1">
+                  {renderCorporate()}
+                </div>
               </>
             )}
           </motion.div>
