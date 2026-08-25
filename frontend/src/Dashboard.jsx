@@ -2,14 +2,43 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Search, Activity, BarChart3, Target, Shield, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Search, Activity, BarChart3, Target, Shield, AlertTriangle, Home, DollarSign, Calculator, Layers } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState("multi-asset");
+
   const [ticker, setTicker] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  // Retail State
+  const [retailForm, setRetailForm] = useState({
+    fico_score: 720, ltv: 80, dti: 35, loan_amount: 350000, interest_rate: 0.055, term_months: 360, months_seasoned: 12
+  });
+  const [retailResult, setRetailResult] = useState(null);
+  const [retailLoading, setRetailLoading] = useState(false);
+
+  const handleRetailChange = (e) => {
+    setRetailForm({ ...retailForm, [e.target.name]: parseFloat(e.target.value) });
+  };
+
+  const analyzeRetail = async (e) => {
+    e.preventDefault();
+    setRetailLoading(true);
+    setError(null);
+    setRetailResult(null);
+    try {
+      const payload = { loans: [{ loan_id: "L-001", ...retailForm }] };
+      const res = await axios.post(`http://127.0.0.1:8000/api/v1/risk/retail/portfolio`, payload);
+      setRetailResult(res.data);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to analyze retail loan.");
+    } finally {
+      setRetailLoading(false);
+    }
+  };
 
   const analyzeTicker = async (e) => {
     e.preventDefault();
@@ -27,12 +56,12 @@ export default function Dashboard() {
     }
   };
 
-  const renderContent = () => {
+  const renderMultiAsset = () => {
     if (!result) return (
       <div className="flex flex-col items-center justify-center h-full text-ivory/30 pt-20">
         <Activity size={48} className="mb-4 opacity-50" />
-        <p className="text-xl font-serif">Enter a ticker to begin credit analysis.</p>
-        <p className="text-sm mt-2">Supports Global Equities, Sovereign Bonds and ETFs.</p>
+        <p className="text-xl font-serif">Enter a ticker to begin quantitative analysis.</p>
+        <p className="text-sm mt-2">Supports Global Equities, Sovereign Bonds, and ETFs.</p>
       </div>
     );
 
@@ -45,7 +74,6 @@ export default function Dashboard() {
             <MetricCard title="Distance to Default (DD)" value={metrics.DD_rn?.toFixed(2)} icon={<Target />} color="text-emerald-400" />
             <MetricCard title="Prob. of Default (1Y)" value={`${(metrics.PD_rn * 100).toFixed(2)}%`} icon={<AlertTriangle />} color="text-red-400" />
             <MetricCard title="Asset Volatility" value={`${(metrics.sigma_V * 100).toFixed(2)}%`} icon={<Activity />} />
-            <MetricCard title="Market Cap" value={`$${(metrics.V_current / 1e9).toFixed(1)}B`} icon={<BarChart3 />} />
             <MetricCard title="FinBERT Sentiment" value={metrics.sentiment_score !== undefined ? metrics.sentiment_score.toFixed(2) : "N/A"} icon={<Activity />} color={metrics.sentiment_score < 0 ? "text-red-400" : "text-emerald-400"} />
           </div>
         </motion.div>
@@ -79,6 +107,72 @@ export default function Dashboard() {
     }
   };
 
+  const renderRetail = () => {
+    return (
+      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col md:flex-row gap-12">
+        <div className="w-full md:w-1/3">
+          <h2 className="font-serif text-2xl mb-6 text-gold">Origination Inputs</h2>
+          <form onSubmit={analyzeRetail} className="space-y-4">
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-ivory/50 mb-1">FICO Score</label>
+              <input type="number" name="fico_score" value={retailForm.fico_score} onChange={handleRetailChange} className="w-full bg-onyx-900 border border-white/10 p-3 text-ivory focus:border-gold outline-none" />
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-xs uppercase tracking-widest text-ivory/50 mb-1">LTV (%)</label>
+                <input type="number" name="ltv" value={retailForm.ltv} onChange={handleRetailChange} className="w-full bg-onyx-900 border border-white/10 p-3 text-ivory focus:border-gold outline-none" />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs uppercase tracking-widest text-ivory/50 mb-1">DTI (%)</label>
+                <input type="number" name="dti" value={retailForm.dti} onChange={handleRetailChange} className="w-full bg-onyx-900 border border-white/10 p-3 text-ivory focus:border-gold outline-none" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-ivory/50 mb-1">Loan Amount ($)</label>
+              <input type="number" name="loan_amount" value={retailForm.loan_amount} onChange={handleRetailChange} className="w-full bg-onyx-900 border border-white/10 p-3 text-ivory focus:border-gold outline-none" />
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-xs uppercase tracking-widest text-ivory/50 mb-1">Rate (Dec)</label>
+                <input type="number" step="0.001" name="interest_rate" value={retailForm.interest_rate} onChange={handleRetailChange} className="w-full bg-onyx-900 border border-white/10 p-3 text-ivory focus:border-gold outline-none" />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs uppercase tracking-widest text-ivory/50 mb-1">Term (Mo)</label>
+                <input type="number" name="term_months" value={retailForm.term_months} onChange={handleRetailChange} className="w-full bg-onyx-900 border border-white/10 p-3 text-ivory focus:border-gold outline-none" />
+              </div>
+            </div>
+            <button type="submit" disabled={retailLoading} className="w-full bg-gold text-onyx-950 font-bold uppercase tracking-widest py-4 hover:bg-white transition-colors disabled:opacity-50 mt-4">
+              {retailLoading ? "Training ML / Analyzing..." : "Run Credit Check"}
+            </button>
+          </form>
+        </div>
+
+        <div className="w-full md:w-2/3">
+          {retailResult ? (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <h2 className="font-serif text-2xl text-ivory/90 mb-6">Credit Origination Risk (XGBoost)</h2>
+              <div className="grid grid-cols-2 gap-6">
+                <MetricCard title="Expected Loss (EL)" value={`$${retailResult.portfolio_expected_loss.toLocaleString(undefined, {maximumFractionDigits:2})}`} icon={<DollarSign />} color="text-red-400" />
+                <MetricCard title="Exposure at Default (EAD)" value={`$${retailResult.portfolio_total_ead.toLocaleString(undefined, {maximumFractionDigits:2})}`} icon={<Calculator />} />
+                <MetricCard title="Prob. of Default (PD)" value={`${(retailResult.loan_results[0].pd * 100).toFixed(2)}%`} icon={<AlertTriangle />} color="text-red-400" />
+                <MetricCard title="Loss Given Default (LGD)" value={`${(retailResult.loan_results[0].lgd * 100).toFixed(2)}%`} icon={<Layers />} color="text-gold" />
+              </div>
+              <div className="p-6 bg-onyx-900/50 border border-white/5 text-sm text-ivory/70 leading-relaxed">
+                <strong>Analysis:</strong> The Expected Loss is mathematically derived as PD × LGD × EAD. The Probability of Default and Loss Given Default are inferred dynamically using an XGBoost Classifier and Regressor trained on synthetic historic mortgage tapes.
+              </div>
+            </motion.div>
+          ) : (
+             <div className="flex flex-col items-center justify-center h-full text-ivory/30 border border-white/5 bg-onyx-900/20 p-12">
+               <Home size={48} className="mb-4 opacity-50" />
+               <p className="text-xl font-serif text-center">Retail Mortgage Module</p>
+               <p className="text-sm mt-2 text-center max-w-md">Input applicant credentials to calculate Expected Loss (EL) using our machine-learning derived credit models.</p>
+             </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-onyx-950 text-ivory font-sans selection:bg-gold selection:text-onyx-950 flex flex-col">
       <nav className="border-b border-white/5 bg-onyx-950/80 backdrop-blur-md sticky top-0 z-50 p-6 flex justify-between items-center">
@@ -86,46 +180,63 @@ export default function Dashboard() {
           <ChevronLeft size={20} />
           <span className="text-sm tracking-[0.2em] uppercase">Back to Hub</span>
         </Link>
-        <div className="text-xl font-serif tracking-widest text-gold uppercase">Credence</div>
+        <div className="text-xl font-serif tracking-widest text-gold uppercase flex items-center gap-6">
+          <button onClick={() => setActiveTab('multi-asset')} className={`transition-colors ${activeTab === 'multi-asset' ? 'text-gold' : 'text-ivory/30 hover:text-ivory/60'}`}>Multi-Asset Engine</button>
+          <span className="text-ivory/10">|</span>
+          <button onClick={() => setActiveTab('retail')} className={`transition-colors ${activeTab === 'retail' ? 'text-gold' : 'text-ivory/30 hover:text-ivory/60'}`}>Retail Credit</button>
+        </div>
       </nav>
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-8 flex flex-col">
-        <div className="mb-12">
-          <h1 className="text-5xl font-serif mb-4">Credit Risk Engine</h1>
-          <p className="text-ivory/50">Real-time asset modelling using Merton/KMV and historical VaR simulations.</p>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+            {activeTab === 'multi-asset' && (
+              <>
+                <div className="mb-12">
+                  <h1 className="text-5xl font-serif mb-4">Quantitative Risk Engine</h1>
+                  <p className="text-ivory/50">Real-time asset modeling using Merton/KMV and FinBERT SEC Sentiment.</p>
+                </div>
 
-        <form onSubmit={analyzeTicker} className="relative max-w-xl mb-12">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-ivory/30">
-            <Search size={20} />
-          </div>
-          <input
-            type="text"
-            className="w-full bg-onyx-900 border border-white/10 rounded-none py-4 pl-12 pr-32 text-lg focus:outline-none focus:border-gold transition-colors text-ivory uppercase"
-            placeholder="E.G. AAPL"
-            value={ticker}
-            onChange={(e) => setTicker(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="absolute inset-y-0 right-0 px-6 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50"
-          >
-            {loading ? "..." : "Analyze"}
-          </button>
-        </form>
+                <form onSubmit={analyzeTicker} className="relative max-w-xl mb-12">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-ivory/30">
+                    <Search size={20} />
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full bg-onyx-900 border border-white/10 rounded-none py-4 pl-12 pr-32 text-lg focus:outline-none focus:border-gold transition-colors text-ivory uppercase"
+                    placeholder="E.G. AAPL, ^TNX, VOO"
+                    value={ticker}
+                    onChange={(e) => setTicker(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="absolute inset-y-0 right-0 px-6 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50"
+                  >
+                    {loading ? "..." : "Analyze"}
+                  </button>
+                </form>
 
-        <AnimatePresence>
-          {error && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">
-              {error}
-            </motion.div>
-          )}
+                {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
+                
+                <div className="flex-1">
+                  {renderMultiAsset()}
+                </div>
+              </>
+            )}
+
+            {activeTab === 'retail' && (
+              <>
+                <div className="mb-12">
+                  <h1 className="text-5xl font-serif mb-4">Retail Credit Check</h1>
+                  <p className="text-ivory/50">Mortgage risk analysis using Expected Loss (EL) models.</p>
+                </div>
+                {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
+                {renderRetail()}
+              </>
+            )}
+          </motion.div>
         </AnimatePresence>
-
-        <div className="flex-1">
-          {renderContent()}
-        </div>
       </main>
     </div>
   );
