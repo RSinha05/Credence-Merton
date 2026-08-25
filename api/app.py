@@ -16,7 +16,7 @@ except ImportError:
     API_VERSION = "1.0.0"
     API_DESCRIPTION = "API for Credit Risk Engine"
 
-from api.routes import health, corporate, retail, multi_asset
+from api.routes import health, corporate, retail, multi_asset, private_equity
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -53,6 +53,7 @@ app.include_router(health.router)
 app.include_router(corporate.router, dependencies=[Depends(verify_credentials)])
 app.include_router(retail.router, dependencies=[Depends(verify_credentials)])
 app.include_router(multi_asset.router, dependencies=[Depends(verify_credentials)])
+app.include_router(private_equity.router, dependencies=[Depends(verify_credentials)])
 
 
 @app.on_event("startup")
