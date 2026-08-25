@@ -68,7 +68,7 @@ async def analyze_multi_asset(ticker: str, db: Session = Depends(get_db)):
             
             res = run_single_firm(
                 equity_series=equity_data['mkt_cap'],
-                D=debt_data['default_point'],
+                D=debt_data.get('default_point_series', debt_data['default_point']),
                 r=rf_rate,
                 T=1.0,
                 sentiment_score=sentiment_score
@@ -105,7 +105,7 @@ async def analyze_multi_asset(ticker: str, db: Session = Depends(get_db)):
                 dd_risk_neutral=dd_rn,
                 pd_risk_neutral=pd_rn,
                 asset_value=v_curr,
-                default_point=d_point,
+                default_point=float(debt_data['default_point']) if debt_data.get('default_point') is not None else None,
                 raw_output=clean_res
             )
             db.add(risk_record)

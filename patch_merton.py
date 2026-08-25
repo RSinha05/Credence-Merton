@@ -3,53 +3,38 @@ import re
 with open('model/merton.py', 'r') as f:
     content = f.read()
 
-# Replace run_single_firm definition
-old_def = """def run_single_firm(
-    equity_series: pd.Series,
-    D: float,
-    r: float,
-    T: float = 1.0,
-    max_iter: int = 50,
-    tol: float = 1e-6
-) -> dict:"""
+old_return = """    return {
+        "asset_series": asset_series,
+        "sigma_V": sigma_V,
+        "DD_rn": dd_rn,
+        "DD_rw": dd_rw,
+        "PD_rn": pd_rn,
+        "PD_rw": pd_rw,
+        "PD_calibrated": float(pd_calibrated) if pd_calibrated is not None else None,
+        "dd_timeseries": dd_timeseries,
+        "pd_term_structure": pd_term_structure,
+        "iterations": n_iter,
+        "mu_rw": mu_rw,
+        "V_current": V_current
+    }"""
 
-new_def = """def run_single_firm(
-    equity_series: pd.Series,
-    D: float,
-    r: float,
-    T: float = 1.0,
-    max_iter: int = 50,
-    tol: float = 1e-6,
-    sentiment_score: float = None
-) -> dict:"""
+new_return = """    return {
+        "asset_series": asset_series,
+        "sigma_V": sigma_V,
+        "DD_rn": dd_rn,
+        "DD_rw": dd_rw,
+        "PD_rn": pd_rn,
+        "PD_rw": pd_rw,
+        "PD_calibrated": float(pd_calibrated) if pd_calibrated is not None else None,
+        "dd_timeseries": dd_timeseries,
+        "pd_term_structure": pd_term_structure,
+        "iterations": n_iter,
+        "mu_rw": mu_rw,
+        "V_current": V_current,
+        "D": D
+    }"""
 
-content = content.replace(old_def, new_def)
-
-old_body = """    # Real-world drift mu (annualized mean of log returns)
-    log_returns_V = np.log(asset_series / asset_series.shift(1)).dropna()
-    mu_rw = log_returns_V.mean() * 252
-
-    # DD
-    dd_rn = compute_distance_to_default(V_current, D, sigma_V, r, T)"""
-
-new_body = """    # NLP Sentiment Adjustment
-    if sentiment_score is not None:
-        # Scale volatility based on sentiment (-1.0 to +1.0)
-        # E.g., highly negative (-1) -> +20% volatility
-        # highly positive (+1) -> -10% volatility
-        # Linear interpolation
-        vol_modifier = -0.15 * sentiment_score + 0.05
-        sigma_V = sigma_V * (1.0 + vol_modifier)
-        logger.info(f"Applied NLP Sentiment {sentiment_score:.2f} -> Adjusted sigma_V to {sigma_V:.4f}")
-
-    # Real-world drift mu (annualized mean of log returns)
-    log_returns_V = np.log(asset_series / asset_series.shift(1)).dropna()
-    mu_rw = log_returns_V.mean() * 252
-
-    # DD
-    dd_rn = compute_distance_to_default(V_current, D, sigma_V, r, T)"""
-
-content = content.replace(old_body, new_body)
+content = content.replace(old_return, new_return)
 
 with open('model/merton.py', 'w') as f:
     f.write(content)

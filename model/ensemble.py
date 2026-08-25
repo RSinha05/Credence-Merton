@@ -38,7 +38,7 @@ def compute_ensemble_risk(
     w_merton = weights.get('merton_pd', 0.6)
     w_altman = weights.get('altman_z', 0.4)
     
-    merton_pd = merton_results.get('pd', merton_results.get('default_probability', 0.0))
+    merton_pd = merton_results.get('PD_rn', 0.0)
     z_score = altman_results.get('z_score', 2.0)
     
     # Normalize Z-Score to PD-like probability
@@ -90,7 +90,7 @@ def compute_ensemble_risk(
 def run_full_assessment(
     ticker: str, 
     equity_series: pd.Series, 
-    D: float, 
+    D: float | pd.Series, 
     r: float, 
     market_cap: float, 
     T: float = 1.0

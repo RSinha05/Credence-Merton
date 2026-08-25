@@ -163,11 +163,8 @@ def fetch_z_score_inputs_from_edgar(ticker: str, market_cap: float) -> Dict[str,
     
     # Fetch financials using configured tags
     # Implementation depends on SECEdgarClient methods, assuming fetch_financial_data
-    try:
-        raw_data = client.fetch_financial_data(ticker, config.ALTMAN_EDGAR_TAGS)
-    except AttributeError:
-        # Fallback pseudo-method
-        raw_data = client.get_financials(ticker, config.ALTMAN_EDGAR_TAGS)
+    # Fetch financials using configured tags. Will explicitly raise exceptions on failure.
+    raw_data = client.fetch_financial_data(ticker, config.ALTMAN_EDGAR_TAGS)
         
     current_assets = raw_data.get('current_assets', 0.0)
     current_liabilities = raw_data.get('current_liabilities', 0.0)

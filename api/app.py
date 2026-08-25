@@ -4,9 +4,11 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBasic, HTTPBasicCredentials, OAuth2PasswordBearer
+import secrets
 try:
     from config import API_TITLE, API_VERSION, API_DESCRIPTION
 except ImportError:
@@ -33,10 +35,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+security = HTTPBasic()
+
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, "credence")
+    correct_password = secrets.compare_digest(credentials.password, "mertonx_api_secret")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
 app.include_router(health.router)
-app.include_router(corporate.router)
-app.include_router(retail.router)
-app.include_router(multi_asset.router)
+app.include_router(corporate.router, dependencies=[Depends(verify_credentials)])
+app.include_router(retail.router, dependencies=[Depends(verify_credentials)])
+app.include_router(multi_asset.router, dependencies=[Depends(verify_credentials)])
+
 
 @app.on_event("startup")
 async def startup_event():

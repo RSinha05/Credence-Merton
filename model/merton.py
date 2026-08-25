@@ -45,7 +45,7 @@ def _merton_equity_equation(V: float, E: float, D: float, r: float, T: float, si
 
 def solve_merton_vk(
     equity_series: pd.Series,
-    D: float,
+    D: float | pd.Series,
     r: float,
     T: float = 1.0,
     max_iter: int = 50,
@@ -95,41 +95,38 @@ def solve_merton_vk(
     asset_series = pd.Series(index=equity_series.index, dtype=float)
     sigma_V_prev = 0.0
 
+    # Align D with equity_series if D is a pandas Series
+    if isinstance(D, pd.Series):
+        D_aligned = D.reindex(equity_series.index, method='ffill').bfill().values
+    else:
+        D_aligned = float(D)
+
+    # Initialize V array for vectorized Newton-Raphson
+    E = equity_series.values
+    V = E + D_aligned
+    D = D_aligned  # Override D with the aligned array or float for the loop
+    
     for i in range(max_iter):
-        # a. For each day t, solve for V_t
-        for t, E_t in equity_series.items():
-            lower_bound = max(E_t * 0.5, 1.0)
-            upper_bound = E_t + 3 * D
+        sigma_V_prev = sigma_V
+        
+        # a. Solve for V_t using vectorized Newton-Raphson
+        for _ in range(10): # inner Newton iterations
+            d1 = (np.log(V / D) + (r + 0.5 * sigma_V**2) * T) / (sigma_V * np.sqrt(T))
+            d2 = d1 - sigma_V * np.sqrt(T)
             
-            try:
-                # Bracket check
-                val_lower = _merton_equity_equation(lower_bound, E_t, D, r, T, sigma_V)
-                val_upper = _merton_equity_equation(upper_bound, E_t, D, r, T, sigma_V)
+            BS_Call = V * norm.cdf(d1) - D * np.exp(-r * T) * norm.cdf(d2)
+            error = BS_Call - E
+            
+            # Derivative of call with respect to V is N(d1)
+            dV = error / norm.cdf(d1)
+            V = V - dV
+            
+            if np.max(np.abs(error)) < 1e-4:
+                break
                 
-                if val_lower * val_upper > 0:
-                    # Broaden bracket
-                    lower_bound = max(E_t * 0.1, 0.1)
-                    upper_bound = E_t + 10 * D
-                    val_lower = _merton_equity_equation(lower_bound, E_t, D, r, T, sigma_V)
-                    val_upper = _merton_equity_equation(upper_bound, E_t, D, r, T, sigma_V)
-                    
-                    if val_lower * val_upper > 0:
-                        logger.warning(f"Failed to bracket root for date {t}. Using previous day's V_t if available.")
-                        if len(asset_series.dropna()) > 0:
-                            asset_series.loc[t] = asset_series.dropna().iloc[-1]
-                        else:
-                            asset_series.loc[t] = E_t + D
-                        continue
-
-                v_opt = brentq(_merton_equity_equation, lower_bound, upper_bound, args=(E_t, D, r, T, sigma_V))
-                asset_series.loc[t] = v_opt
-
-            except Exception as e:
-                logger.warning(f"Optimization failed on date {t}: {e}")
-                if len(asset_series.dropna()) > 0:
-                    asset_series.loc[t] = asset_series.dropna().iloc[-1]
-                else:
-                    asset_series.loc[t] = E_t + D
+        # Floor V to E to prevent impossible states
+        V = np.maximum(V, E + 1e-4)
+        asset_series[:] = V
         
         # b. Compute log returns of the V_t series
         log_returns_V = np.log(asset_series / asset_series.shift(1)).dropna()
@@ -137,12 +134,10 @@ def solve_merton_vk(
         # c. Recompute sigma_V_new
         sigma_V_new = log_returns_V.std(ddof=1) * np.sqrt(252)
         
-        # d. If |sigma_V_new - sigma_V| < tol: converged
+        # d. Converged?
         if abs(sigma_V_new - sigma_V) < tol:
             return asset_series, sigma_V_new, sigma_V, i + 1
             
-        # e. update
-        sigma_V_prev = sigma_V
         sigma_V = sigma_V_new
         
     logger.warning("Vasicek-Kealhofer Iterative Solver did not converge within the maximum number of iterations.")
@@ -236,7 +231,7 @@ def compute_pd_term_structure(
 
 def run_single_firm(
     equity_series: pd.Series,
-    D: float,
+    D: float | pd.Series,
     r: float,
     T: float = 1.0,
     max_iter: int = 50,
@@ -272,6 +267,7 @@ def run_single_firm(
         raise
 
     V_current = asset_series.iloc[-1]
+    D_current = D.iloc[-1] if isinstance(D, pd.Series) else D
     
     # NLP Sentiment Adjustment
     if sentiment_score is not None:
@@ -288,8 +284,8 @@ def run_single_firm(
     mu_rw = log_returns_V.mean() * 252
 
     # DD
-    dd_rn = compute_distance_to_default(V_current, D, sigma_V, r, T)
-    dd_rw = compute_distance_to_default(V_current, D, sigma_V, mu_rw, T)
+    dd_rn = compute_distance_to_default(V_current, D_current, sigma_V, r, T)
+    dd_rw = compute_distance_to_default(V_current, D_current, sigma_V, mu_rw, T)
 
     # PD
     pd_rn = compute_probability_of_default(dd_rn)
@@ -299,7 +295,7 @@ def run_single_firm(
     dd_timeseries = compute_dd_time_series(asset_series, D, sigma_V, mu_rw, T)
 
     # Term structure
-    pd_term_structure = compute_pd_term_structure(V_current, D, sigma_V, mu_rw)
+    pd_term_structure = compute_pd_term_structure(V_current, D_current, sigma_V, mu_rw)
 
     try:
         pd_calibrated = _CALIBRATOR.predict(dd_rw)
@@ -319,5 +315,6 @@ def run_single_firm(
         "pd_term_structure": pd_term_structure,
         "iterations": n_iter,
         "mu_rw": mu_rw,
-        "V_current": V_current
+        "V_current": V_current,
+        "D": float(D_current)
     }

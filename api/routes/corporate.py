@@ -65,7 +65,7 @@ async def analyze_corporate_risk(ticker: str, request: Optional[CorporateRiskReq
             res = run_full_assessment(
                 ticker=ticker,
                 equity_series=equity_data['mkt_cap'],
-                D=debt_data['default_point'],
+                D=debt_data.get('default_point_series', debt_data['default_point']),
                 r=rf_rate,
                 market_cap=market_cap,
                 T=request.time_horizon
@@ -77,13 +77,43 @@ async def analyze_corporate_risk(ticker: str, request: Optional[CorporateRiskReq
             # Run Merton only
             merton_res = run_single_firm(
                 equity_series=equity_data['mkt_cap'],
-                D=debt_data['default_point'],
+                D=debt_data.get('default_point_series', debt_data['default_point']),
                 r=rf_rate,
                 T=request.time_horizon
             )
             altman_res = None
             ensemble_res = None
             
+        # Serialize for DB insertion
+        import numpy as np
+        import pandas as pd
+        def serialize_for_db(obj):
+            if isinstance(obj, pd.Series):
+                return {str(k): v for k, v in obj.to_dict().items()}
+            if isinstance(obj, np.integer):
+                return int(obj)
+            if isinstance(obj, np.floating):
+                return float(obj)
+            if isinstance(obj, dict):
+                return {k: serialize_for_db(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [serialize_for_db(i) for i in obj]
+            return obj
+        
+        full_res = {'merton': merton_res, 'altman': altman_res, 'ensemble': ensemble_res}
+        clean_res = serialize_for_db(full_res)
+        
+        firm = db.query(Firm).filter(Firm.ticker == ticker).first()
+        if not firm:
+            firm = Firm(ticker=ticker, name=f"{ticker} Corp", sp_rating="NR", moodys_rating="NR", sector="Unknown")
+            db.add(firm)
+            db.commit()
+            db.refresh(firm)
+            
+        risk_record = RiskResult(firm_id=firm.id, model_type='corporate_ews', raw_output=clean_res)
+        db.add(risk_record)
+        db.commit()
+
         return CorporateRiskResponse(
             ticker=ticker,
             name=f"{ticker} Corporation",
