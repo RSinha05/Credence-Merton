@@ -240,7 +240,8 @@ def run_single_firm(
     r: float,
     T: float = 1.0,
     max_iter: int = 50,
-    tol: float = 1e-6
+    tol: float = 1e-6,
+    sentiment_score: float = None
 ) -> dict:
     """
     Runs the full single-firm pipeline for Merton/KMV model.
@@ -272,6 +273,16 @@ def run_single_firm(
 
     V_current = asset_series.iloc[-1]
     
+    # NLP Sentiment Adjustment
+    if sentiment_score is not None:
+        # Scale volatility based on sentiment (-1.0 to +1.0)
+        # E.g., highly negative (-1) -> +20% volatility
+        # highly positive (+1) -> -10% volatility
+        # Linear interpolation
+        vol_modifier = -0.15 * sentiment_score + 0.05
+        sigma_V = sigma_V * (1.0 + vol_modifier)
+        logger.info(f"Applied NLP Sentiment {sentiment_score:.2f} -> Adjusted sigma_V to {sigma_V:.4f}")
+
     # Real-world drift mu (annualized mean of log returns)
     log_returns_V = np.log(asset_series / asset_series.shift(1)).dropna()
     mu_rw = log_returns_V.mean() * 252

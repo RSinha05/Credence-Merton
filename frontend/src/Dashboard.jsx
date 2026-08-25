@@ -31,8 +31,8 @@ export default function Dashboard() {
     if (!result) return (
       <div className="flex flex-col items-center justify-center h-full text-ivory/30 pt-20">
         <Activity size={48} className="mb-4 opacity-50" />
-        <p className="text-xl font-serif">Enter a ticker to begin quantitative analysis.</p>
-        <p className="text-sm mt-2">Supports Global Equities, Sovereign Bonds, and ETFs.</p>
+        <p className="text-xl font-serif">Enter a ticker to begin credit analysis.</p>
+        <p className="text-sm mt-2">Supports Global Equities, Sovereign Bonds and ETFs.</p>
       </div>
     );
 
@@ -46,6 +46,7 @@ export default function Dashboard() {
             <MetricCard title="Prob. of Default (1Y)" value={`${(metrics.PD_rn * 100).toFixed(2)}%`} icon={<AlertTriangle />} color="text-red-400" />
             <MetricCard title="Asset Volatility" value={`${(metrics.sigma_V * 100).toFixed(2)}%`} icon={<Activity />} />
             <MetricCard title="Market Cap" value={`$${(metrics.V_current / 1e9).toFixed(1)}B`} icon={<BarChart3 />} />
+            <MetricCard title="FinBERT Sentiment" value={metrics.sentiment_score !== undefined ? metrics.sentiment_score.toFixed(2) : "N/A"} icon={<Activity />} color={metrics.sentiment_score < 0 ? "text-red-400" : "text-emerald-400"} />
           </div>
         </motion.div>
       );
@@ -85,13 +86,13 @@ export default function Dashboard() {
           <ChevronLeft size={20} />
           <span className="text-sm tracking-[0.2em] uppercase">Back to Hub</span>
         </Link>
-        <div className="text-xl font-serif tracking-widest text-gold uppercase">Blackswan Nova</div>
+        <div className="text-xl font-serif tracking-widest text-gold uppercase">Credence</div>
       </nav>
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-8 flex flex-col">
         <div className="mb-12">
-          <h1 className="text-5xl font-serif mb-4">Quantitative Risk Engine</h1>
-          <p className="text-ivory/50">Real-time asset modeling using Merton/KMV and historical VaR simulations.</p>
+          <h1 className="text-5xl font-serif mb-4">Credit Risk Engine</h1>
+          <p className="text-ivory/50">Real-time asset modelling using Merton/KMV and historical VaR simulations.</p>
         </div>
 
         <form onSubmit={analyzeTicker} className="relative max-w-xl mb-12">
@@ -101,7 +102,7 @@ export default function Dashboard() {
           <input
             type="text"
             className="w-full bg-onyx-900 border border-white/10 rounded-none py-4 pl-12 pr-32 text-lg focus:outline-none focus:border-gold transition-colors text-ivory uppercase"
-            placeholder="E.G. AAPL, ^TNX, VOO"
+            placeholder="E.G. AAPL"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
           />

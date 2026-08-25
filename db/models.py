@@ -67,3 +67,14 @@ class AnalysisJob(Base):
     created_at = Column(DateTime, default=utcnow)
     completed_at = Column(DateTime, nullable=True)
     error_message = Column(Text, nullable=True)
+
+class SentimentAnalysis(Base):
+    __tablename__ = "sentiment_analysis"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ticker = Column(String, index=True)
+    document_type = Column(String)  # e.g., '8-K', '10-K'
+    filing_date = Column(String)
+    raw_text_snippet = Column(Text)
+    sentiment_score = Column(Float) # -1.0 to 1.0
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
