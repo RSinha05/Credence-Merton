@@ -50,11 +50,11 @@ export default function Header() {
 
         <div className="hidden lg:flex items-center gap-6">
           <a
-            href="#invitation"
+            href="/dashboard"
             data-testid="header-cta"
             className="btn-primary"
           >
-            Request Invitation
+            Blackswan Nova
           </a>
         </div>
 
@@ -86,11 +86,11 @@ export default function Header() {
               </a>
             ))}
             <a
-              href="#invitation"
+              href="/dashboard"
               onClick={() => setOpen(false)}
               className="btn-primary text-center"
             >
-              Request Invitation
+              Blackswan Nova
             </a>
           </div>
         </div>
