@@ -12,20 +12,20 @@ from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
-RATING_ORDER = ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'D']
+RATING_ORDER = ['A++', 'A+', 'A', 'B++', 'B+', 'B', 'C', 'D']
 
 def dd_to_rating(dd: float) -> str:
     """
     Map Distance to Default (DD) to a rating bucket.
     
     Mapping criteria:
-    DD > 5.0      -> 'AAA'
-    4.0 < DD <= 5.0 -> 'AA'
+    DD > 5.0      -> 'A++'
+    4.0 < DD <= 5.0 -> 'A+'
     3.0 < DD <= 4.0 -> 'A'
-    2.0 < DD <= 3.0 -> 'BBB'
-    1.5 < DD <= 2.0 -> 'BB'
+    2.0 < DD <= 3.0 -> 'B++'
+    1.5 < DD <= 2.0 -> 'B+'
     1.0 < DD <= 1.5 -> 'B'
-    0.0 <= DD <= 1.0 -> 'CCC'
+    0.0 <= DD <= 1.0 -> 'C'
     DD < 0.0      -> 'D'
 
     Args:
@@ -37,19 +37,19 @@ def dd_to_rating(dd: float) -> str:
     if pd.isna(dd):
         return 'D'
     if dd > 5.0:
-        return 'AAA'
+        return 'A++'
     elif dd > 4.0:
-        return 'AA'
+        return 'A+'
     elif dd > 3.0:
         return 'A'
     elif dd > 2.0:
-        return 'BBB'
+        return 'B++'
     elif dd > 1.5:
-        return 'BB'
+        return 'B+'
     elif dd > 1.0:
         return 'B'
     elif dd >= 0.0:
-        return 'CCC'
+        return 'C'
     else:
         return 'D'
 

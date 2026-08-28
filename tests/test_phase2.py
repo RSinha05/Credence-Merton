@@ -78,8 +78,8 @@ class TestPortfolioRisk:
 class TestMigration:
     def test_dd_to_rating(self):
         from model.migration import dd_to_rating
-        assert dd_to_rating(6.0) == 'AAA'
-        assert dd_to_rating(2.5) == 'BBB'
+        assert dd_to_rating(6.0) == 'A++'
+        assert dd_to_rating(2.5) == 'B++'
         assert dd_to_rating(-1.0) == 'D'
 
     def test_transition_matrix_rows_sum_to_one(self):
