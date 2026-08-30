@@ -59,6 +59,7 @@ class CorporateRiskResponse(BaseModel):
     ticker: str = Field(..., description="Stock ticker symbol")
     name: str = Field(..., description="Company name")
     sp_rating: str = Field(..., description="Implied S&P Rating")
+    ordinal: Optional[int] = Field(None, description="Rating ordinal")
     computed_at: datetime = Field(..., description="Computation timestamp")
     merton: MertonResult = Field(..., description="Merton model results")
     altman: Optional[AltmanResult] = Field(None, description="Altman Z-Score results")

@@ -1,81 +1,11 @@
-INFO:     Started server process [9340]
+INFO:     Started server process [28298]
 INFO:     Waiting for application startup.
-2026-08-28 22:47:49,361 - api.app - INFO - --- Starting Credence-MertonX Credit Risk Engine v1.0.0 ---
+2026-08-30 16:05:28,767 - api.app - INFO - --- Starting Credence-MertonX Credit Risk Engine v1.0.0 ---
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:50649 - "OPTIONS /api/vault/case-studies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50649 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:50725 - "OPTIONS /api/v1/risk/multi-asset/V HTTP/1.1" 200 OK
-2026-08-28 22:58:21,825 - api.routes.multi_asset - INFO - Analyzing multi-asset risk for V
-2026-08-28 22:58:30,875 - data.risk_free - WARNING - Tier 2 (FRED CSV) failed: Missing column provided to 'parse_dates': 'DATE'
-2026-08-28 22:58:31,906 - data.risk_free - INFO - Successfully fetched risk-free rate using Yahoo Finance (Tier 3).
-2026-08-28 22:58:33,737 - api.routes.nlp - INFO - Fetching 8-K for V
-2026-08-28 22:58:34,591 - data.sec_scraper - INFO - Fetching 8-K from https://www.sec.gov/Archives/edgar/data/0001403161/000140316126000103/v-20260728.htm
-2026-08-28 22:58:34,687 - api.routes.nlp - INFO - Running FinBERT for V
-2026-08-28 22:58:34,687 - model.nlp_sentiment - INFO - Loading FinBERT model...
-2026-08-28 22:58:34,985 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
-2026-08-28 22:58:35,227 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-08-28 22:58:35,231 - huggingface_hub.utils._http - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-2026-08-28 22:58:35,248 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/config.json "HTTP/1.1 200 OK"
-2026-08-28 22:58:35,492 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
-2026-08-28 22:58:35,526 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/tokenizer_config.json "HTTP/1.1 200 OK"
-2026-08-28 22:58:35,765 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
-2026-08-28 22:58:36,010 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
-2026-08-28 22:58:36,330 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
-2026-08-28 22:58:36,384 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/ProsusAI/finbert/4556d13015211d73dccd3fdd39d39232506f3e43/config.json "HTTP/1.1 200 OK"
-2026-08-28 22:58:36,887 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
-2026-08-28 22:58:37,132 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert "HTTP/1.1 200 OK"
-Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 29472.30it/s]
-2026-08-28 22:58:37,416 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert/commits/main "HTTP/1.1 200 OK"
-2026-08-28 22:58:37,676 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert/discussions?p=0 "HTTP/1.1 200 OK"
-2026-08-28 22:58:37,923 - httpx - INFO - HTTP Request: GET https://huggingface.co/api/models/ProsusAI/finbert/commits/refs%2Fpr%2F29 "HTTP/1.1 200 OK"
-2026-08-28 22:58:38,164 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/refs%2Fpr%2F29/model.safetensors.index.json "HTTP/1.1 404 Not Found"
-2026-08-28 22:58:38,216 - model.merton - INFO - Applied NLP Sentiment -0.02 -> Adjusted sigma_V to 0.2261
-2026-08-28 22:58:38,398 - httpx - INFO - HTTP Request: HEAD https://huggingface.co/ProsusAI/finbert/resolve/refs%2Fpr%2F29/model.safetensors "HTTP/1.1 302 Found"
-INFO:     127.0.0.1:50725 - "GET /api/v1/risk/multi-asset/V HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50737 - "OPTIONS /api/v1/risk/private/company HTTP/1.1" 200 OK
-2026-08-28 22:58:55,337 - model.private_firm - INFO - Running Moody's Private Firm Model for TVSH73.NS
-2026-08-28 22:58:55,337 - data.private_comps - INFO - Finding comps for private company: TVSH73.NS (Sector: Financials)
-INFO:     127.0.0.1:50737 - "POST /api/v1/risk/private/company HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50815 - "OPTIONS /api/v1/risk/private/company HTTP/1.1" 200 OK
-2026-08-28 23:17:09,124 - model.private_firm - INFO - Running Moody's Private Firm Model for BDL57.NS
-2026-08-28 23:17:09,125 - data.private_comps - INFO - Finding comps for private company: BDL57.NS (Sector: Consumer)
-INFO:     127.0.0.1:50815 - "POST /api/v1/risk/private/company HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51068 - "OPTIONS /api/v1/risk/retail/portfolio HTTP/1.1" 200 OK
-2026-08-29 00:34:01,769 - api.routes.retail - INFO - Analyzing retail portfolio with 1 loans
-2026-08-29 00:34:01,773 - api.routes.retail - INFO - Initializing Retail Risk Engine and training on synthetic data...
-2026-08-29 00:34:01,777 - data.synthetic_mortgage - INFO - Generating synthetic loan tape for 10000 loans with seed 42
-2026-08-29 00:34:01,898 - data.synthetic_mortgage - INFO - Generation complete. Actual default rate: 6.20%
-2026-08-29 00:34:01,931 - model.retail_credit - INFO - Training PD model.
-/opt/anaconda3/lib/python3.14/site-packages/xgboost/training.py:200: UserWarning: [00:34:02] WARNING: /Users/runner/work/xgboost/xgboost/src/learner.cc:794: 
-Parameters: { "use_label_encoder" } are not used.
-
-  bst.update(dtrain, iteration=i, fobj=obj)
-/opt/anaconda3/lib/python3.14/site-packages/xgboost/training.py:200: UserWarning: [00:34:02] WARNING: /Users/runner/work/xgboost/xgboost/src/learner.cc:794: 
-Parameters: { "use_label_encoder" } are not used.
-
-  bst.update(dtrain, iteration=i, fobj=obj)
-/opt/anaconda3/lib/python3.14/site-packages/xgboost/training.py:200: UserWarning: [00:34:02] WARNING: /Users/runner/work/xgboost/xgboost/src/learner.cc:794: 
-Parameters: { "use_label_encoder" } are not used.
-
-  bst.update(dtrain, iteration=i, fobj=obj)
-/opt/anaconda3/lib/python3.14/site-packages/xgboost/training.py:200: UserWarning: [00:34:02] WARNING: /Users/runner/work/xgboost/xgboost/src/learner.cc:794: 
-Parameters: { "use_label_encoder" } are not used.
-
-  bst.update(dtrain, iteration=i, fobj=obj)
-/opt/anaconda3/lib/python3.14/site-packages/xgboost/training.py:200: UserWarning: [00:34:02] WARNING: /Users/runner/work/xgboost/xgboost/src/learner.cc:794: 
-Parameters: { "use_label_encoder" } are not used.
-
-  bst.update(dtrain, iteration=i, fobj=obj)
-2026-08-29 00:34:02,648 - model.retail_credit - INFO - PD Model CV ROC AUC: 0.7285
-/opt/anaconda3/lib/python3.14/site-packages/xgboost/training.py:200: UserWarning: [00:34:02] WARNING: /Users/runner/work/xgboost/xgboost/src/learner.cc:794: 
-Parameters: { "use_label_encoder" } are not used.
-
-  bst.update(dtrain, iteration=i, fobj=obj)
-2026-08-29 00:34:02,704 - model.retail_credit - INFO - Training LGD model.
-2026-08-29 00:34:02,749 - model.retail_credit - INFO - LGD Model RMSE: 0.0692
-2026-08-29 00:34:02,749 - api.routes.retail - INFO - Retail Risk Engine initialized successfully.
-2026-08-29 00:34:02,755 - model.retail_credit - INFO - Predicting Expected Loss components.
-2026-08-29 00:34:02,756 - model.retail_credit - INFO - Calculating EAD.
-INFO:     127.0.0.1:51068 - "POST /api/v1/risk/retail/portfolio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53456 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53457 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
+2026-08-30 16:05:42,206 - api.routes.corporate - INFO - Fetching portfolio summary for default
+INFO:     127.0.0.1:53457 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+2026-08-30 16:05:46,616 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
+INFO:     127.0.0.1:53456 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK

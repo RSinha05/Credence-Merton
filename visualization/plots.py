@@ -201,3 +201,43 @@ def plot_pd_term_structure(
     fig.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
     return fig
+
+# -----------------------------------------------------------------------------
+# JSON Serialization for Frontend (Parallel to Matplotlib plots)
+# -----------------------------------------------------------------------------
+
+def serialize_dd_time_series(dd_series_dict: Dict[str, pd.Series]) -> Dict[str, Dict[str, float]]:
+    """Convert DD series dict to JSON-serializable format."""
+    out = {}
+    for ticker, series in dd_series_dict.items():
+        out[ticker] = {str(k.date()) if hasattr(k, 'date') else str(k): float(v) for k, v in series.items()}
+    return out
+
+def serialize_pd_vs_rating(results_df: pd.DataFrame) -> list:
+    """Convert PD vs Rating data to JSON-serializable list of records."""
+    if 'ticker' not in results_df.columns or 'PD_rn' not in results_df.columns or 'ordinal' not in results_df.columns:
+        return []
+        
+    records = results_df[['ticker', 'PD_rn', 'ordinal']].dropna().to_dict('records')
+    # ensure float
+    for r in records:
+        r['PD_rn'] = float(r['PD_rn'])
+        r['ordinal'] = int(r['ordinal'])
+    return records
+
+def serialize_asset_vs_barrier(ticker: str, asset_series: pd.Series, D: float) -> dict:
+    """Convert Asset vs Barrier data to JSON-serializable format."""
+    series_data = {str(k.date()) if hasattr(k, 'date') else str(k): float(v) for k, v in asset_series.items()}
+    return {
+        'ticker': ticker,
+        'asset_series': series_data,
+        'default_barrier': float(D)
+    }
+
+def serialize_pd_term_structure(pd_terms: Dict[float, float], ticker: str) -> dict:
+    """Convert PD Term structure to JSON-serializable format."""
+    terms = {str(k): float(v) for k, v in pd_terms.items()}
+    return {
+        'ticker': ticker,
+        'pd_terms': terms
+    }

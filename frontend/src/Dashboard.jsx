@@ -9,7 +9,7 @@ axios.defaults.auth = {
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Search, Activity, BarChart3, Target, Shield, AlertTriangle, Home, DollarSign, Calculator, Layers, TrendingDown, Building2, Briefcase, Landmark, Zap } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Cell , LineChart, Line, ScatterChart, Scatter, ZAxis } from "recharts";
 import { ASSET_UNIVERSE } from "./universe";
 import { PE_UNIVERSE } from "./pe_universe";
 
@@ -96,17 +96,49 @@ export default function Dashboard() {
   const analyzeCorporate = async (e) => {
     e.preventDefault();
     if (!corporateTicker) return;
-    setCorporateLoading(true); setError(null); setCorporateResult(null); setDeepResult(null);
+    setCorporateLoading(true); setError(null); setCorporateResult(null); setDeepResult(null); setCorporateTimeseries(null);
     try {
       const payload = { ticker: corporateTicker.toUpperCase(), time_horizon: 1.0, include_altman: true };
-      const [corpRes, deepRes] = await Promise.all([
+      const [corpRes, deepRes, tsRes] = await Promise.all([
         axios.post(`${API}/api/v1/risk/corporate/${corporateTicker.toUpperCase()}`, payload),
-        axios.get(`${API}/api/v1/analytics/deep/${corporateTicker.toUpperCase()}`).catch(() => null)
+        axios.get(`${API}/api/v1/analytics/deep/${corporateTicker.toUpperCase()}`).catch(() => null),
+        axios.get(`${API}/api/v1/risk/corporate/${corporateTicker.toUpperCase()}/timeseries`).catch(() => null)
       ]);
       setCorporateResult(corpRes.data);
       if (deepRes) setDeepResult(deepRes.data);
+      if (tsRes) setCorporateTimeseries(tsRes.data);
     } catch (err) { setError(err.response?.data?.detail || "Failed to analyze corporate asset."); }
     finally { setCorporateLoading(false); }
+  };
+
+  
+  // Corporate Timeseries State
+  const [corporateTimeseries, setCorporateTimeseries] = useState(null);
+
+  // Portfolio & Alerts State
+  const [portfolioSummary, setPortfolioSummary] = useState(null);
+  const [alertsData, setAlertsData] = useState([]);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (activeTab === 'portfolio-alerts' && !portfolioSummary) {
+      fetchPortfolioAlerts();
+    }
+  }, [activeTab]);
+
+  const fetchPortfolioAlerts = async () => {
+    setPortfolioLoading(true);
+    try {
+      const [portRes, alertRes] = await Promise.all([
+        axios.get(`${API}/api/v1/risk/portfolio/default/summary`),
+        axios.get(`${API}/api/v1/risk/alerts`)
+      ]);
+      setPortfolioSummary(portRes.data);
+      setAlertsData(alertRes.data);
+    } catch (e) {
+      console.error(e);
+    }
+    setPortfolioLoading(false);
   };
 
   // Stress Testing State
@@ -252,6 +284,24 @@ export default function Dashboard() {
           <MetricCard title="Altman Z-Score" value={altman?.z_score?.toFixed(2) || "N/A"} icon={<Activity />} color={altman?.z_score < 1.8 ? "text-red-400" : "text-emerald-400"} />
           <MetricCard title="Z-Score Zone" value={altman?.z_zone || "N/A"} icon={<AlertTriangle />} />
         </div>
+
+        
+        {corporateTimeseries && corporateTimeseries.dd_timeseries && (
+          <div className="mt-8 p-6 bg-onyx-900/30 border border-white/5">
+            <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">Distance-to-Default (DD) Trajectory</h4>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={Object.entries(corporateTimeseries.dd_timeseries).map(([k, v]) => ({ date: k, value: v })).sort((a,b) => new Date(a.date) - new Date(b.date))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                  <XAxis dataKey="date" stroke="#ffffff50" tick={{fontSize: 10}} />
+                  <YAxis stroke="#ffffff50" tick={{fontSize: 10}} />
+                  <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} />
+                  <Line type="monotone" dataKey="value" stroke="#d4af37" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
 
         {/* Phase 2: Bank-Grade Analytics Panel */}
         {deepResult && (
@@ -563,7 +613,74 @@ export default function Dashboard() {
     </>
   );
 
+  
+  const renderPortfolioAlerts = () => {
+    if (portfolioLoading) return <div className="text-center p-12 text-ivory/50">Loading Portfolio & Alerts...</div>;
+    
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
+        
+        {/* Alerts Section */}
+        <div>
+          <h2 className="font-serif text-3xl mb-6 text-red-400 flex items-center gap-3"><AlertTriangle /> Active Risk Alerts</h2>
+          {alertsData.length === 0 ? (
+            <div className="p-6 bg-onyx-900/30 border border-white/5 text-ivory/50">No active alerts.</div>
+          ) : (
+            <div className="space-y-4">
+              {alertsData.map((alert, i) => (
+                <div key={i} className={`p-4 border-l-4 flex justify-between items-center bg-onyx-900/30 ${alert.alert_level === 'critical' ? 'border-red-500' : 'border-amber-500'}`}>
+                  <div>
+                    <span className="font-mono font-bold text-lg mr-4">{alert.ticker}</span>
+                    <span className="text-sm uppercase tracking-widest text-ivory/50">{alert.alert_level}</span>
+                    <p className="text-sm mt-1">{alert.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-ivory/40">Current DD</div>
+                    <div className="font-mono">{alert.current_dd?.toFixed(2)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Portfolio Summary Section */}
+        {portfolioSummary && (
+          <div>
+            <h2 className="font-serif text-3xl mb-6">Portfolio Risk Summary</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <MetricCard title="Avg Portfolio PD" value={`${(portfolioSummary.avg_pd * 100).toFixed(2)}%`} icon={<Target />} color="text-gold" />
+              <MetricCard title="Median DD" value={portfolioSummary.median_dd?.toFixed(2)} icon={<Shield />} />
+              <MetricCard title="Highest Risk Ticker" value={portfolioSummary.worst_ticker} icon={<AlertTriangle />} color="text-red-400" />
+              <MetricCard title="PD/Rating Rank Corr" value={portfolioSummary.spearman_rho?.toFixed(2)} icon={<Activity />} />
+            </div>
+
+            {/* Scatter Plot */}
+            {portfolioSummary.scatter_data && (
+              <div className="p-6 bg-onyx-900/30 border border-white/5">
+                <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">PD vs Rating Ordinal</h4>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                      <XAxis dataKey="ordinal" type="number" name="Rating Ordinal" stroke="#ffffff50" tick={{fontSize: 10}} />
+                      <YAxis dataKey="PD_rn" type="number" name="PD (Risk Neutral)" stroke="#ffffff50" tick={{fontSize: 10}} />
+                      <Tooltip cursor={{strokeDasharray: '3 3'}} contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} />
+                      <Scatter name="Firms" data={portfolioSummary.scatter_data} fill="#d4af37" />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+      </motion.div>
+    );
+  };
+
   const TABS = [
+    { key: 'portfolio-alerts', label: 'Portfolio & Alerts' },
     { key: 'multi-asset', label: 'Multi-Asset & NLP' },
     { key: 'corporate', label: 'Corporate EWS' },
     { key: 'stress-testing', label: 'Stress Testing' },
