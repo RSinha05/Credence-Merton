@@ -115,9 +115,10 @@ export default function Dashboard() {
   // Corporate Timeseries State
   const [corporateTimeseries, setCorporateTimeseries] = useState(null);
 
-  // Portfolio & Alerts State
+  // Portfolio & Alerts & News State
   const [portfolioSummary, setPortfolioSummary] = useState(null);
   const [alertsData, setAlertsData] = useState([]);
+  const [newsData, setNewsData] = useState([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
 
   React.useEffect(() => {
@@ -129,12 +130,14 @@ export default function Dashboard() {
   const fetchPortfolioAlerts = async () => {
     setPortfolioLoading(true);
     try {
-      const [portRes, alertRes] = await Promise.all([
+      const [portRes, alertRes, newsRes] = await Promise.all([
         axios.get(`${API}/api/v1/risk/portfolio/default/summary`),
-        axios.get(`${API}/api/v1/risk/alerts`)
+        axios.get(`${API}/api/v1/risk/alerts`),
+        axios.get(`${API}/api/v1/news/feed`).catch(() => null)
       ]);
       setPortfolioSummary(portRes.data);
       setAlertsData(alertRes.data);
+      if (newsRes) setNewsData(newsRes.data);
     } catch (e) {
       console.error(e);
     }
@@ -674,6 +677,32 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Financial News Feed */}
+        <div>
+          <h2 className="font-serif text-3xl mb-6 flex items-center gap-3"><BarChart3 className="text-gold" /> Market Intelligence Feed</h2>
+          {newsData.length === 0 ? (
+            <div className="p-6 bg-onyx-900/30 border border-white/5 text-ivory/50">Loading news feed...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {newsData.map((article, i) => (
+                <a key={i} href={article.link} target="_blank" rel="noopener noreferrer"
+                  className="group p-5 bg-onyx-900/30 border border-white/5 hover:border-gold/30 hover:bg-onyx-900/60 transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className="w-1 h-full min-h-[3rem] bg-gold/40 group-hover:bg-gold transition-colors flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-ivory leading-snug group-hover:text-gold transition-colors line-clamp-3">{article.title}</p>
+                      <div className="flex items-center gap-3 mt-3">
+                        <span className="text-[10px] uppercase tracking-widest text-gold/60 bg-gold/10 px-2 py-0.5">{article.source || 'Yahoo Finance'}</span>
+                        {article.category && <span className="text-[10px] uppercase tracking-widest text-ivory/30">{article.category}</span>}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
 
       </motion.div>
     );

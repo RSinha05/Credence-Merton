@@ -1,11 +1,398 @@
-INFO:     Started server process [28298]
+INFO:     Started server process [2217]
 INFO:     Waiting for application startup.
-2026-08-30 16:05:28,767 - api.app - INFO - --- Starting Credence-MertonX Credit Risk Engine v1.0.0 ---
+2026-08-31 18:09:12,178 - api.app - INFO - --- Starting Credence-MertonX Credit Risk Engine v1.0.0 ---
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:53456 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53457 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
-2026-08-30 16:05:42,206 - api.routes.corporate - INFO - Fetching portfolio summary for default
-INFO:     127.0.0.1:53457 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-2026-08-30 16:05:46,616 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
-INFO:     127.0.0.1:53456 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49500 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49501 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
+2026-08-31 18:09:37,037 - api.routes.corporate - INFO - Fetching portfolio summary for default
+INFO:     127.0.0.1:49501 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+2026-08-31 18:09:39,863 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
+INFO:     127.0.0.1:49500 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49503 - "OPTIONS /api/vault/case-studies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49503 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49515 - "OPTIONS /api/v1/risk/private/company HTTP/1.1" 200 OK
+2026-08-31 18:10:27,026 - model.private_firm - INFO - Running Moody's Private Firm Model for VLI93.NS
+2026-08-31 18:10:27,026 - data.private_comps - INFO - Finding comps for private company: VLI93.NS (Sector: Healthcare)
+INFO:     127.0.0.1:49515 - "POST /api/v1/risk/private/company HTTP/1.1" 200 OK
+2026-08-31 18:10:34,385 - api.routes.corporate - INFO - Fetching portfolio summary for default
+INFO:     127.0.0.1:49516 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+2026-08-31 18:10:34,951 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
+INFO:     127.0.0.1:49517 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49518 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
+2026-08-31 18:11:59,328 - model.private_firm - INFO - Running Moody's Private Firm Model for VEC80
+2026-08-31 18:11:59,330 - data.private_comps - INFO - Finding comps for private company: VEC80 (Sector: Tech)
+INFO:     127.0.0.1:49528 - "POST /api/v1/risk/private/company HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49612 - "OPTIONS /api/v1/risk/corporate/TCS.NS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49613 - "OPTIONS /api/v1/analytics/deep/TCS.NS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49614 - "OPTIONS /api/v1/risk/corporate/TCS.NS/timeseries HTTP/1.1" 200 OK
+2026-08-31 18:26:58,541 - api.routes.corporate - INFO - Analyzing corporate risk for TCS.NS
+2026-08-31 18:27:03,116 - data.risk_free - WARNING - Tier 2 (FRED CSV) failed: Missing column provided to 'parse_dates': 'DATE'
+2026-08-31 18:27:05,134 - data.risk_free - INFO - Successfully fetched risk-free rate using Yahoo Finance (Tier 3).
+2026-08-31 18:27:05,134 - api.routes.corporate - INFO - Fetched new risk-free rate: 0.037300000190734865
+2026-08-31 18:27:07,496 - data.edgar - ERROR - CIK not found for ticker TCS.NS
+2026-08-31 18:27:07,496 - data.edgar - ERROR - Error extracting debt data for TCS.NS: CIK not found for ticker TCS.NS
+2026-08-31 18:27:07,496 - api.routes.corporate - ERROR - EDGAR data error for TCS.NS: CIK not found for ticker TCS.NS
+INFO:     127.0.0.1:49614 - "POST /api/v1/risk/corporate/TCS.NS HTTP/1.1" 400 Bad Request
+2026-08-31 18:27:08,860 - data.edgar - ERROR - CIK not found for ticker TCS.NS
+2026-08-31 18:27:08,860 - data.edgar - ERROR - Error extracting debt data for TCS.NS: CIK not found for ticker TCS.NS
+2026-08-31 18:27:09,537 - data.risk_free - WARNING - Tier 2 (FRED CSV) failed: Missing column provided to 'parse_dates': 'DATE'
+2026-08-31 18:27:09,593 - data.risk_free - INFO - Successfully fetched risk-free rate using Yahoo Finance (Tier 3).
+INFO:     127.0.0.1:49613 - "GET /api/v1/analytics/deep/TCS.NS HTTP/1.1" 200 OK
+2026-08-31 18:27:09,611 - api.routes.corporate - INFO - Fetching timeseries for TCS.NS
+2026-08-31 18:27:30,408 - api.app - ERROR - Unhandled exception on http://127.0.0.1:8000/api/v1/risk/corporate/TCS.NS/timeseries: (psycopg2.OperationalError) could not receive data from server: Operation timed out
+SSL SYSCALL error: Operation timed out
+
+[SQL: SELECT firms.id AS firms_id, firms.ticker AS firms_ticker, firms.name AS firms_name, firms.sp_rating AS firms_sp_rating, firms.moodys_rating AS firms_moodys_rating, firms.sector AS firms_sector, firms.created_at AS firms_created_at, firms.updated_at AS firms_updated_at 
+FROM firms 
+WHERE firms.ticker = %(ticker_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'ticker_1': 'TCS.NS', 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: could not receive data from server: Operation timed out
+SSL SYSCALL error: Operation timed out
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/cors.py", line 96, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/cors.py", line 154, in simple_response
+    await self.app(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 2734, in app
+    await route.handle(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 1780, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 2789, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 1800, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 1279, in handle
+    await app(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 158, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 144, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 706, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 352, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rishavsinha/Desktop/Credence-MertonX/api/routes/corporate.py", line 286, in get_corporate_timeseries
+    firm = db.query(Firm).filter(Firm.ticker == ticker.upper()).first()
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/query.py", line 2766, in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/query.py", line 2864, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+        params,
+        ^^^^^^^
+        execution_options={"_sa_orm_load_options": self.load_options},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        conn,
+        ^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) could not receive data from server: Operation timed out
+SSL SYSCALL error: Operation timed out
+
+[SQL: SELECT firms.id AS firms_id, firms.ticker AS firms_ticker, firms.name AS firms_name, firms.sp_rating AS firms_sp_rating, firms.moodys_rating AS firms_moodys_rating, firms.sector AS firms_sector, firms.created_at AS firms_created_at, firms.updated_at AS firms_updated_at 
+FROM firms 
+WHERE firms.ticker = %(ticker_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'ticker_1': 'TCS.NS', 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+INFO:     127.0.0.1:49612 - "GET /api/v1/risk/corporate/TCS.NS/timeseries HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: could not receive data from server: Operation timed out
+SSL SYSCALL error: Operation timed out
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.14/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/cors.py", line 96, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/cors.py", line 154, in simple_response
+    await self.app(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 2734, in app
+    await route.handle(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 1780, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 2789, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 1800, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 1279, in handle
+    await app(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 158, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/opt/anaconda3/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 144, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 706, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/fastapi/routing.py", line 352, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rishavsinha/Desktop/Credence-MertonX/api/routes/corporate.py", line 286, in get_corporate_timeseries
+    firm = db.query(Firm).filter(Firm.ticker == ticker.upper()).first()
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/query.py", line 2766, in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/query.py", line 2864, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+        params,
+        ^^^^^^^
+        execution_options={"_sa_orm_load_options": self.load_options},
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        conn,
+        ^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/anaconda3/lib/python3.14/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) could not receive data from server: Operation timed out
+SSL SYSCALL error: Operation timed out
+
+[SQL: SELECT firms.id AS firms_id, firms.ticker AS firms_ticker, firms.name AS firms_name, firms.sp_rating AS firms_sp_rating, firms.moodys_rating AS firms_moodys_rating, firms.sector AS firms_sector, firms.created_at AS firms_created_at, firms.updated_at AS firms_updated_at 
+FROM firms 
+WHERE firms.ticker = %(ticker_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'ticker_1': 'TCS.NS', 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+INFO:     127.0.0.1:49639 - "GET /api/v1/health HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49641 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49649 - "OPTIONS /api/vault/case-studies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49649 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49663 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49733 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49734 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
+2026-08-31 18:52:54,801 - api.routes.corporate - INFO - Fetching portfolio summary for default
+INFO:     127.0.0.1:49733 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+2026-08-31 18:52:56,353 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
+INFO:     127.0.0.1:49734 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49792 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49793 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
+2026-08-31 19:04:03,879 - api.routes.corporate - INFO - Fetching portfolio summary for default
+INFO:     127.0.0.1:49792 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+2026-08-31 19:04:04,459 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
+INFO:     127.0.0.1:49793 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
