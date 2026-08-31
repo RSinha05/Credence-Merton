@@ -737,6 +737,7 @@ export default function Dashboard() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-8 flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+            {activeTab === 'portfolio-alerts' && renderPortfolioAlerts()}
             {activeTab === 'multi-asset' && (<>
               <div className="mb-12"><h1 className="text-5xl font-serif mb-4">Quantitative Risk Engine</h1><p className="text-ivory/50">Real-time asset modeling using Merton/KMV and FinBERT SEC Sentiment.</p></div>
               <form onSubmit={analyzeTicker} className="relative max-w-xl mb-12">
