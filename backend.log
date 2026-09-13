@@ -39,3 +39,26 @@ INFO:     127.0.0.1:56879 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
 2026-08-31 21:22:15,846 - api.routes.corporate - INFO - Fetching portfolio summary for default
 INFO:     127.0.0.1:57465 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
 INFO:     127.0.0.1:58936 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63537 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63538 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63539 - "OPTIONS /api/v1/news/feed HTTP/1.1" 200 OK
+2026-08-31 22:44:19,223 - api.routes.corporate - INFO - Fetching portfolio summary for default
+INFO:     127.0.0.1:63537 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+2026-08-31 22:44:19,328 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
+INFO:     127.0.0.1:63538 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63539 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59103 - "OPTIONS /api/vault/case-studies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59103 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59111 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59112 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59113 - "OPTIONS /api/v1/news/feed HTTP/1.1" 200 OK
+2026-09-01 16:58:48,098 - api.routes.corporate - INFO - Fetching portfolio summary for default
+INFO:     127.0.0.1:59111 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
+2026-09-01 16:58:48,251 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
+INFO:     127.0.0.1:59112 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59113 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60819 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60840 - "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60819 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60840 - "GET /apple-touch-icon.png HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60840 - "GET /favicon.ico HTTP/1.1" 404 Not Found

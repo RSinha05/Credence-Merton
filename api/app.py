@@ -16,7 +16,8 @@ except ImportError:
     API_VERSION = "1.0.0"
     API_DESCRIPTION = "API for Credit Risk Engine"
 
-from api.routes import health, corporate, retail, multi_asset, private_equity, analytics, news
+from api.routes import health, corporate, retail, multi_asset, private_equity, analytics, news, analyst, market
+from api.seed import seed_if_empty
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -34,7 +35,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 security = HTTPBasic()
 
@@ -56,12 +56,15 @@ app.include_router(multi_asset.router, dependencies=[Depends(verify_credentials)
 app.include_router(private_equity.router, dependencies=[Depends(verify_credentials)])
 app.include_router(analytics.router, dependencies=[Depends(verify_credentials)])
 app.include_router(news.router, dependencies=[Depends(verify_credentials)])
+app.include_router(analyst.router, dependencies=[Depends(verify_credentials)])
+app.include_router(market.router, dependencies=[Depends(verify_credentials)])
 
 
 @app.on_event("startup")
 async def startup_event():
     """Log banner on startup."""
     logger.info(f"--- Starting {API_TITLE} v{API_VERSION} ---")
+    seed_if_empty()
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):

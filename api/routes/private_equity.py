@@ -227,3 +227,52 @@ async def lbo_sample_endpoint():
     except Exception as e:
         logger.error(f"Error in get_sample_lbo_schedule: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/summary")
+async def pe_fund_summary(fund_name: str = "Credence PE Fund I"):
+    companies_data = [
+        {"name": "TechFlow Inc", "sector": "Software", "revenue": 150.0, "ebitda": 45.0, "total_debt": 200.0, "equity_value": 300.0, "entry_multiple": 10.0, "current_multiple": 11.1, "investment_date": "2021-06-15", "status": "active"},
+        {"name": "MediCare Plus", "sector": "Healthcare", "revenue": 300.0, "ebitda": 60.0, "total_debt": 350.0, "equity_value": 250.0, "entry_multiple": 9.5, "current_multiple": 10.0, "investment_date": "2020-03-10", "status": "active"},
+        {"name": "BuildRight Corp", "sector": "Industrials", "revenue": 500.0, "ebitda": 80.0, "total_debt": 400.0, "equity_value": 400.0, "entry_multiple": 8.0, "current_multiple": 10.0, "investment_date": "2019-11-20", "status": "active"},
+        {"name": "RetailMax", "sector": "Consumer", "revenue": 200.0, "ebitda": 20.0, "total_debt": 180.0, "equity_value": 50.0, "entry_multiple": 12.0, "current_multiple": 11.5, "investment_date": "2022-01-05", "status": "active"},
+        {"name": "CloudServe", "sector": "Software", "revenue": 80.0, "ebitda": 25.0, "total_debt": 100.0, "equity_value": 150.0, "entry_multiple": 11.0, "current_multiple": 10.0, "investment_date": "2023-08-12", "status": "active"},
+        {"name": "GreenEnergy Co", "sector": "Energy", "revenue": 400.0, "ebitda": 100.0, "total_debt": 600.0, "equity_value": 300.0, "entry_multiple": 7.5, "current_multiple": 9.0, "investment_date": "2018-05-30", "status": "active"},
+        {"name": "Logistics Pro", "sector": "Industrials", "revenue": 250.0, "ebitda": 35.0, "total_debt": 150.0, "equity_value": 200.0, "entry_multiple": 8.5, "current_multiple": 10.0, "investment_date": "2021-09-18", "status": "active"},
+        {"name": "FoodBrand", "sector": "Consumer", "revenue": 120.0, "ebitda": 15.0, "total_debt": 50.0, "equity_value": 100.0, "entry_multiple": 9.0, "current_multiple": 10.0, "investment_date": "2019-02-14", "status": "exited"},
+    ]
+
+    total_nav = 0.0
+    total_invested = 0.0
+    alert_count = 0
+    enriched_companies = []
+
+    for c in companies_data:
+        if c["status"] == "active":
+            debt_coverage = c["ebitda"] / c["total_debt"] if c["total_debt"] > 0 else 999.0
+            covenant_headroom = (debt_coverage - 1.5) / 1.5
+            implied_pd = min(max((c["total_debt"] / c["ebitda"]) * 0.015 if c["ebitda"] > 0 else 0.5, 0.0), 1.0)
+            
+            c["debt_coverage"] = debt_coverage
+            c["covenant_headroom"] = covenant_headroom
+            c["implied_pd"] = implied_pd
+            
+            if covenant_headroom < 0.1:
+                alert_count += 1
+                
+            total_nav += c["equity_value"]
+            total_invested += (c["total_debt"] + c["equity_value"]) / c["entry_multiple"] * (c["entry_multiple"] * 0.5) # approximate
+
+        enriched_companies.append(c)
+
+    gross_moic = 2.1
+    net_irr = 0.18
+
+    return {
+        "fund_name": fund_name,
+        "total_nav": total_nav,
+        "total_invested": 1500.0,
+        "gross_moic": gross_moic,
+        "net_irr": net_irr,
+        "alert_count": alert_count,
+        "companies": enriched_companies
+    }
