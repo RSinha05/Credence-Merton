@@ -273,14 +273,14 @@ export default function Dashboard() {
       const sentimentLabel = metrics.sentiment_score > 0.15 ? "Bullish" : metrics.sentiment_score < -0.15 ? "Bearish" : "Neutral";
       const sentimentColor = metrics.sentiment_score > 0.15 ? "text-emerald-400" : metrics.sentiment_score < -0.15 ? "text-red-400" : "text-amber-400";
 
-      // Prepare chart data
+      // Prepare chart data (keys are now 'YYYY-MM-DD' strings instead of integers)
       const assetChartData = metrics.asset_series ? Object.entries(metrics.asset_series)
-        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-        .map(([day, val]) => ({ day: parseInt(day), value: val / 1e9 })) : [];
+        .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+        .map(([dateStr, val]) => ({ day: dateStr, value: val / 1e9 })) : [];
 
       const ddChartData = metrics.dd_timeseries ? Object.entries(metrics.dd_timeseries)
-        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-        .map(([day, val]) => ({ day: parseInt(day), dd: val })) : [];
+        .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+        .map(([dateStr, val]) => ({ day: dateStr, dd: val })) : [];
 
       const pdTermData = metrics.pd_term_structure ? Object.entries(metrics.pd_term_structure)
         .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
@@ -499,6 +499,23 @@ export default function Dashboard() {
         </div>
 
         
+        {corporateTimeseries && corporateTimeseries.asset_series && (
+          <div className="mt-8 p-6 bg-onyx-900/30 border border-white/5">
+            <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">Implied Asset Value ($B) — Merton Framework</h4>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={Object.entries(corporateTimeseries.asset_series).map(([k, v]) => ({ date: k, value: v / 1e9 })).sort((a,b) => new Date(a.date) - new Date(b.date))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                  <XAxis dataKey="date" stroke="#ffffff50" tick={{fontSize: 10}} />
+                  <YAxis stroke="#ffffff50" tick={{fontSize: 10}} domain={['auto', 'auto']} />
+                  <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} formatter={(v) => [`$${v.toFixed(1)}B`, 'Asset Value']} />
+                  <Area type="monotone" dataKey="value" stroke="#d4af37" fill="rgba(212,175,55,0.1)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
         {corporateTimeseries && corporateTimeseries.dd_timeseries && (
           <div className="mt-8 p-6 bg-onyx-900/30 border border-white/5">
             <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">Distance-to-Default (DD) Trajectory</h4>
@@ -507,10 +524,27 @@ export default function Dashboard() {
                 <LineChart data={Object.entries(corporateTimeseries.dd_timeseries).map(([k, v]) => ({ date: k, value: v })).sort((a,b) => new Date(a.date) - new Date(b.date))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
                   <XAxis dataKey="date" stroke="#ffffff50" tick={{fontSize: 10}} />
-                  <YAxis stroke="#ffffff50" tick={{fontSize: 10}} />
+                  <YAxis stroke="#ffffff50" tick={{fontSize: 10}} domain={['auto', 'auto']} />
                   <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} />
-                  <Line type="monotone" dataKey="value" stroke="#d4af37" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={false} name="DD" />
                 </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {corporateResult.pd_term_structure && (
+          <div className="mt-8 p-6 bg-onyx-900/30 border border-white/5">
+            <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">PD Term Structure — Cumulative Default Probability</h4>
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={Object.entries(corporateResult.pd_term_structure).map(([horizon, pd]) => ({ horizon: `${horizon}Y`, pd: pd * 100 })).sort((a,b) => parseFloat(a.horizon) - parseFloat(b.horizon))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                  <XAxis dataKey="horizon" stroke="#ffffff50" tick={{fontSize: 11}} />
+                  <YAxis stroke="#ffffff50" tick={{fontSize: 10}} />
+                  <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} formatter={(v) => [`${v.toFixed(6)}%`, 'PD']} />
+                  <Bar dataKey="pd" fill="#d4af37" name="PD (%)" />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
