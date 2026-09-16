@@ -232,12 +232,23 @@ export default function Dashboard() {
   // === RENDER: MULTI-ASSET ===
   const [liveMarket, setLiveMarket] = useState(null);
 
-  // Fetch live market data when result loads
   React.useEffect(() => {
     if (result && result.ticker) {
       axios.get(`${API}/api/v1/market/live/${result.ticker}`).then(r => setLiveMarket(r.data)).catch(() => {});
     }
   }, [result]);
+
+  React.useEffect(() => {
+    if (corporateResult && corporateTicker) {
+      axios.get(`${API}/api/v1/market/live/${corporateTicker.toUpperCase()}`).then(r => setLiveMarket(r.data)).catch(() => {});
+    }
+  }, [corporateResult]);
+
+  React.useEffect(() => {
+    if (stressResult && stressTicker) {
+      axios.get(`${API}/api/v1/market/live/${stressTicker.toUpperCase()}`).then(r => setLiveMarket(r.data)).catch(() => {});
+    }
+  }, [stressResult]);
 
   const renderMultiAsset = () => {
     if (!result) return (
@@ -460,6 +471,26 @@ export default function Dashboard() {
     const { merton, altman, ensemble } = corporateResult;
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+        {/* Live Market Ticker Bar */}
+        {liveMarket && (
+          <div className="flex items-center gap-6 p-4 bg-onyx-900/30 border border-white/5 overflow-x-auto mb-4">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-2xl font-bold text-gold">{corporateTicker.toUpperCase()}</span>
+              <span className="text-3xl font-light font-serif">${liveMarket.current_price?.toFixed(2)}</span>
+              <span className={`font-mono text-sm ${liveMarket.change_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {liveMarket.change_pct >= 0 ? '▲' : '▼'} {Math.abs(liveMarket.change_pct)?.toFixed(2)}%
+              </span>
+            </div>
+            <div className="flex gap-6 text-xs text-ivory/40 ml-auto">
+              <div><span className="block text-ivory/60">Mkt Cap</span>${(liveMarket.market_cap / 1e9)?.toFixed(0)}B</div>
+              <div><span className="block text-ivory/60">52W H/L</span>${liveMarket.fifty_two_week_high?.toFixed(0)} / ${liveMarket.fifty_two_week_low?.toFixed(0)}</div>
+              <div><span className="block text-ivory/60">Beta</span>{liveMarket.beta?.toFixed(2)}</div>
+              <div><span className="block text-ivory/60">P/E</span>{liveMarket.pe_ratio?.toFixed(1) || '—'}</div>
+              <div><span className="block text-ivory/60">Volume</span>{(liveMarket.volume / 1e6)?.toFixed(1)}M</div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <MetricCard title="Ensemble PD (1Y)" value={`${(ensemble.ensemble_pd * 100).toFixed(2)}%`} icon={<Target />} color="text-red-400" />
           <MetricCard title="Risk Tier" value={ensemble.risk_tier} icon={<Shield />} color={ensemble.risk_tier === "HIGH" ? "text-red-400" : "text-gold"} />
@@ -687,9 +718,19 @@ export default function Dashboard() {
     finally { setCvaLoading(false); }
   };
 
-  const renderCva = () => (
+  const renderCva = () => {
+    let cvaChartData = [];
+    if (cvaResult && cvaResult.time_grid) {
+      cvaChartData = cvaResult.time_grid.map((t, i) => ({
+        time: t.toFixed(2),
+        ee: cvaResult.expected_exposure[i],
+        pfe: cvaResult.pfe_95[i]
+      }));
+    }
+    
+    return (
     <>
-      <div className="mb-12"><h1 className="text-5xl font-serif mb-4">Counterparty Risk (CVA)</h1><p className="text-ivory/50">Simulate Expected Exposure and Credit Value Adjustment using GBM.</p></div>
+      <div className="mb-12"><h1 className="text-5xl font-serif mb-4">Counterparty Risk (CVA)</h1><p className="text-ivory/50">Simulate Expected Exposure and Credit Value Adjustment using GBM Monte Carlo (5000 paths).</p></div>
       
       <div className="flex gap-4 mb-8">
         <button onClick={analyzeCVA} disabled={cvaLoading} className="px-6 py-3 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50">
@@ -706,13 +747,39 @@ export default function Dashboard() {
       )}
 
       {cvaResult && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <MetricCard title="Total CVA" value={`$${cvaResult.cva.toLocaleString(undefined, {maximumFractionDigits: 2})}`} icon={<Activity size={40} />} />
-          <MetricCard title="Max PFE (95%)" value={`$${Math.max(...cvaResult.pfe_95).toLocaleString(undefined, {maximumFractionDigits: 2})}`} icon={<Zap size={40} />} />
-        </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <MetricCard title="Total CVA Charge" value={`$${cvaResult.cva.toLocaleString(undefined, {maximumFractionDigits: 0})}`} icon={<DollarSign />} color="text-red-400" />
+            <MetricCard title="Max PFE (95%)" value={`$${Math.max(...cvaResult.pfe_95).toLocaleString(undefined, {maximumFractionDigits: 0})}`} icon={<Zap />} color="text-gold" />
+            <MetricCard title="Avg Expected Exposure" value={`$${(cvaResult.expected_exposure.reduce((a,b)=>a+b,0)/cvaResult.expected_exposure.length).toLocaleString(undefined, {maximumFractionDigits: 0})}`} icon={<Activity />} />
+          </div>
+
+          <div className="p-6 bg-onyx-900/30 border border-white/5">
+            <h4 className="text-xs uppercase tracking-widest text-gold mb-6">Expected Exposure (EE) & Potential Future Exposure (PFE) Profile</h4>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={cvaChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                  <XAxis dataKey="time" stroke="#ffffff50" tick={{fontSize: 10}} />
+                  <YAxis stroke="#ffffff50" tick={{fontSize: 10}} tickFormatter={(val) => `$${(val/1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} formatter={(v) => [`$${v.toLocaleString(undefined, {maximumFractionDigits: 0})}`, '']} />
+                  <Area type="monotone" dataKey="pfe" stroke="#d4af37" fill="rgba(212,175,55,0.1)" strokeWidth={2} name="PFE (95%)" />
+                  <Area type="monotone" dataKey="ee" stroke="#10b981" fill="rgba(16,185,129,0.2)" strokeWidth={2} name="Expected Exposure (EE)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          <div className="p-6 bg-onyx-900/50 border border-white/5 text-sm text-ivory/70 leading-relaxed">
+            <strong>Methodology:</strong> Simulates 5,000 geometric Brownian motion paths over a 5-year horizon (60 time steps). 
+            <strong>Expected Exposure (EE)</strong> is the mean positive exposure across all paths at each step. 
+            <strong>PFE 95%</strong> represents the 95th percentile worst-case exposure.
+            <strong>CVA</strong> is integrated over the EE profile applying standard LGD and counterparty hazard rates.
+          </div>
+        </motion.div>
       )}
     </>
-  );
+  )};
 
   // === RENDER: STRESS TESTING ===
   const SCENARIO_COLORS = { ccar_baseline: '#10b981', ccar_adverse: '#f59e0b', ccar_severely_adverse: '#ef4444', eba_adverse: '#f97316', pandemic: '#8b5cf6', rate_hike: '#3b82f6' };
@@ -732,6 +799,26 @@ export default function Dashboard() {
       {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
       {stressResult ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+          {/* Live Market Ticker Bar */}
+          {liveMarket && (
+            <div className="flex items-center gap-6 p-4 bg-onyx-900/30 border border-white/5 overflow-x-auto mb-4">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-2xl font-bold text-gold">{stressTicker.toUpperCase()}</span>
+                <span className="text-3xl font-light font-serif">${liveMarket.current_price?.toFixed(2)}</span>
+                <span className={`font-mono text-sm ${liveMarket.change_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {liveMarket.change_pct >= 0 ? '▲' : '▼'} {Math.abs(liveMarket.change_pct)?.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex gap-6 text-xs text-ivory/40 ml-auto">
+                <div><span className="block text-ivory/60">Mkt Cap</span>${(liveMarket.market_cap / 1e9)?.toFixed(0)}B</div>
+                <div><span className="block text-ivory/60">52W H/L</span>${liveMarket.fifty_two_week_high?.toFixed(0)} / ${liveMarket.fifty_two_week_low?.toFixed(0)}</div>
+                <div><span className="block text-ivory/60">Beta</span>{liveMarket.beta?.toFixed(2)}</div>
+                <div><span className="block text-ivory/60">P/E</span>{liveMarket.pe_ratio?.toFixed(1) || '—'}</div>
+                <div><span className="block text-ivory/60">Volume</span>{(liveMarket.volume / 1e6)?.toFixed(1)}M</div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <MetricCard title="Base PD" value={`${(stressResult.base_case.PD_rn * 100).toFixed(2)}%`} icon={<Target />} color="text-emerald-400" />
             <MetricCard title="Base DD" value={stressResult.base_case.DD_rn.toFixed(2)} icon={<Activity />} color="text-emerald-400" />
