@@ -88,18 +88,19 @@ def solve_merton_vk(
     log_returns_E = np.log(equity_series / equity_series.shift(1)).dropna()
     sigma_E = log_returns_E.std(ddof=1) * np.sqrt(252)
 
-    # 2. Seed: sigma_V
-    E_latest = equity_series.iloc[-1]
-    sigma_V = sigma_E * E_latest / (E_latest + D)
-
-    asset_series = pd.Series(index=equity_series.index, dtype=float)
-    sigma_V_prev = 0.0
-
     # Align D with equity_series if D is a pandas Series
     if isinstance(D, pd.Series):
         D_aligned = D.reindex(equity_series.index, method='ffill').bfill().values
     else:
         D_aligned = float(D)
+
+    # 2. Seed: sigma_V
+    E_latest = equity_series.iloc[-1]
+    D_latest = D_aligned[-1] if isinstance(D_aligned, np.ndarray) else D_aligned
+    sigma_V = float(sigma_E * E_latest / (E_latest + D_latest))
+
+    asset_series = pd.Series(index=equity_series.index, dtype=float)
+    sigma_V_prev = 0.0
 
     # Initialize V array for vectorized Newton-Raphson
     E = equity_series.values
@@ -292,7 +293,15 @@ def run_single_firm(
     pd_rw = compute_probability_of_default(dd_rw)
 
     # Time series
-    dd_timeseries = compute_dd_time_series(asset_series, D, sigma_V, mu_rw, T)
+    if isinstance(D, pd.Series):
+        D_for_ts = D.reindex(asset_series.index, method='ffill').bfill().values
+    else:
+        D_for_ts = D
+        
+    dd_timeseries = pd.Series(
+        [compute_distance_to_default(v, d, sigma_V, mu_rw, T) for v, d in zip(asset_series.values, D_for_ts if isinstance(D_for_ts, np.ndarray) else [D_for_ts]*len(asset_series))],
+        index=asset_series.index
+    )
 
     # Term structure
     pd_term_structure = compute_pd_term_structure(V_current, D_current, sigma_V, mu_rw)

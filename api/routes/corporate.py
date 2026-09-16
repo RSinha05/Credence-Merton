@@ -104,16 +104,22 @@ async def analyze_corporate_risk(ticker: str, request: Optional[CorporateRiskReq
         full_res = {'merton': merton_res, 'altman': altman_res, 'ensemble': ensemble_res}
         clean_res = serialize_for_db(full_res)
         
-        firm = db.query(Firm).filter(Firm.ticker == ticker).first()
-        if not firm:
-            firm = Firm(ticker=ticker, name=f"{ticker} Corp", sp_rating="NR", moodys_rating="NR", sector="Unknown")
-            db.add(firm)
+        from db.database import SessionLocal
+        from db.models import Firm, RiskResult
+        db = SessionLocal()
+        try:
+            firm = db.query(Firm).filter(Firm.ticker == ticker).first()
+            if not firm:
+                firm = Firm(ticker=ticker, name=f"{ticker} Corp", sp_rating="NR", moodys_rating="NR", sector="Unknown")
+                db.add(firm)
+                db.commit()
+                db.refresh(firm)
+                
+            risk_record = RiskResult(firm_id=firm.id, model_type='corporate_ews', raw_output=clean_res)
+            db.add(risk_record)
             db.commit()
-            db.refresh(firm)
-            
-        risk_record = RiskResult(firm_id=firm.id, model_type='corporate_ews', raw_output=clean_res)
-        db.add(risk_record)
-        db.commit()
+        finally:
+            db.close()
 
                 # Extract and serialize timeseries data from merton_res
         dd_ts = merton_res.get('dd_timeseries')

@@ -31,12 +31,16 @@ def fetch_equity_data(ticker: str, lookback_days: int = 252) -> pd.DataFrame:
             raise ValueError(f"Shares outstanding not found for {ticker}.")
         
         df = hist[['Close']].copy()
-        df.reset_index(inplace=True)
-        df.rename(columns={'Date': 'date', 'Close': 'close'}, inplace=True)
+        df.index.name = 'date'
+        df.rename(columns={'Close': 'close'}, inplace=True)
         
         df['mkt_cap'] = df['close'] * shares_outstanding
         df['log_return'] = np.log(df['close'] / df['close'].shift(1))
         
+        # Make index tz-naive so it aligns with EDGAR dates cleanly
+        if df.index.tz is not None:
+            df.index = df.index.tz_localize(None)
+            
         # Return the last lookback_days rows
         return df.tail(lookback_days)
     except Exception as e:
