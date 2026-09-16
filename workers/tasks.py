@@ -89,6 +89,58 @@ def analyze_portfolio_task(self, tickers: list, time_horizon: float = 1.0) -> di
     logger.info("Portfolio analysis finished")
     return {"results": results, "errors": errors}
 
+@celery_app.task(bind=True, name='risk.batch_cva')
+def batch_cva_task(self, tickers: list, initial_value: float = 1_000_000.0, volatility: float = 0.20, horizon_years: float = 5.0) -> dict:
+    import numpy as np
+    from model.counterparty import CounterpartyRiskEngine
+    logger.info(f"Starting batch CVA analysis for {len(tickers)} tickers")
+    results = {}
+    errors = {}
+    
+    engine = CounterpartyRiskEngine(n_simulations=1000) # Lower paths for batch speed
+    exposure_paths = engine.simulate_exposure(initial_value, volatility, horizon_years, steps=int(horizon_years * 12))
+    
+    total = len(tickers)
+    for idx, ticker in enumerate(tickers):
+        self.update_state(state='PROGRESS', meta={'current': idx, 'total': total, 'status': f'Calculating CVA for {ticker}'})
+        try:
+            rf_rate = fetch_risk_free_rate()
+            equity_data = fetch_equity_data(ticker)
+            edgar_client = SECEdgarClient()
+            debt_data = edgar_client.extract_debt_data(ticker)
+            market_cap = equity_data.iloc[-1]['mkt_cap']
+            
+            res = run_full_assessment(
+                ticker=ticker,
+                equity_series=equity_data['mkt_cap'],
+                D=debt_data.get('default_point_series', debt_data['default_point']),
+                r=rf_rate,
+                market_cap=market_cap,
+                T=1.0
+            )
+            # Interpolate PD term structure to match steps
+            pd_terms = res['merton']['pd_term_structure']
+            # Basic linear interpolation for monthly steps
+            horizons = sorted(list(pd_terms.keys()))
+            pds = [pd_terms[h] for h in horizons]
+            step_times = np.linspace(0, horizon_years, int(horizon_years * 12))
+            interp_pd = np.interp(step_times, [0.0] + horizons, [0.0] + pds)
+            
+            cva_res = engine.calculate_cva(exposure_paths, interp_pd, lgd=0.40, risk_free_rate=rf_rate, horizon_years=horizon_years)
+            
+            results[ticker] = {
+                'cva': cva_res['cva'],
+                'pfe_95_max': float(np.max(cva_res['pfe_95'])),
+                'pd_1y': pd_terms.get(1.0, 0.0)
+            }
+        except Exception as e:
+            logger.error(f"Error calculating CVA for {ticker}: {str(e)}")
+            errors[ticker] = str(e)
+            
+    self.update_state(state='PROGRESS', meta={'current': total, 'total': total, 'status': 'Completed'})
+    logger.info("Batch CVA analysis finished")
+    return {"results": results, "errors": errors}
+
 @celery_app.task(name='risk.refresh_risk_free_rate')
 def refresh_risk_free_rate_task() -> float:
     logger.info("Starting refresh of risk free rate")

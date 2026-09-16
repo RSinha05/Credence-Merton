@@ -2,6 +2,7 @@ import yaml
 import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from api.routes.analytics import serialize_for_db
 from typing import Dict, Any
 import numpy as np
 
@@ -106,7 +107,7 @@ async def analyze_multi_asset(ticker: str, db: Session = Depends(get_db)):
                 pd_risk_neutral=pd_rn,
                 asset_value=v_curr,
                 default_point=float(debt_data['default_point']) if debt_data.get('default_point') is not None else None,
-                raw_output=clean_res
+                raw_output=serialize_for_db(clean_res)
             )
             db.add(risk_record)
             db.commit()
@@ -116,7 +117,7 @@ async def analyze_multi_asset(ticker: str, db: Session = Depends(get_db)):
         elif asset_class == 'ETF':
             engine = ETFRiskEngine(ticker)
             res = engine.run_assessment()
-            risk_record = RiskResult(firm_id=firm.id, model_type='etf_risk', raw_output=res)
+            risk_record = RiskResult(firm_id=firm.id, model_type='etf_risk', raw_output=serialize_for_db(res))
             db.add(risk_record)
             db.commit()
             return {"ticker": ticker, **res}
@@ -124,7 +125,7 @@ async def analyze_multi_asset(ticker: str, db: Session = Depends(get_db)):
         elif asset_class == 'BOND':
             engine = FixedIncomeEngine(ticker)
             res = engine.run_assessment()
-            risk_record = RiskResult(firm_id=firm.id, model_type='fixed_income', raw_output=res)
+            risk_record = RiskResult(firm_id=firm.id, model_type='fixed_income', raw_output=serialize_for_db(res))
             db.add(risk_record)
             db.commit()
             return {"ticker": ticker, **res}

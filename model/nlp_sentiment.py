@@ -1,6 +1,10 @@
 import logging
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+try:
+    import torch
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+    HAS_NLP = True
+except ImportError:
+    HAS_NLP = False
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +30,7 @@ def analyze_sentiment(text: str) -> float:
     Negative -> closer to -1.0
     Neutral  -> closer to 0.0
     """
-    if not text:
+    if not HAS_NLP or not text:
         return 0.0
         
     load_model()

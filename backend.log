@@ -1,64 +1,8 @@
-INFO:     Started server process [5559]
+INFO:     Started server process [17960]
 INFO:     Waiting for application startup.
-2026-08-31 20:56:53,472 - api.app - INFO - --- Starting Credence-MertonX Credit Risk Engine v1.0.0 ---
+2026-09-16 21:45:26,128 - api.app - INFO - --- Starting Credence-MertonX Credit Risk Engine v1.0.0 ---
+2026-09-16 21:45:26,138 - api.seed - INFO - Database already seeded.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:50010 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50011 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50012 - "OPTIONS /api/v1/news/feed HTTP/1.1" 200 OK
-2026-08-31 20:56:55,215 - api.routes.corporate - INFO - Fetching portfolio summary for default
-INFO:     127.0.0.1:50010 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-2026-08-31 20:56:55,264 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
-INFO:     127.0.0.1:50012 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50011 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50034 - "OPTIONS /api/vault/case-studies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50034 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:50036 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50037 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50038 - "OPTIONS /api/v1/news/feed HTTP/1.1" 200 OK
-2026-08-31 20:58:41,395 - api.routes.corporate - INFO - Fetching portfolio summary for default
-INFO:     127.0.0.1:50036 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-2026-08-31 20:58:41,445 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
-INFO:     127.0.0.1:50037 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50038 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50048 - "OPTIONS /api/v1/risk/multi-asset/SBIN.NS HTTP/1.1" 200 OK
-2026-08-31 21:01:46,610 - api.routes.multi_asset - INFO - Analyzing multi-asset risk for SBIN.NS
-2026-08-31 21:01:51,303 - data.risk_free - WARNING - Tier 2 (FRED CSV) failed: Missing column provided to 'parse_dates': 'DATE'
-2026-08-31 21:01:53,214 - data.risk_free - INFO - Successfully fetched risk-free rate using Yahoo Finance (Tier 3).
-2026-08-31 21:01:55,099 - api.routes.nlp - INFO - Fetching 8-K for SBIN.NS
-2026-08-31 21:01:55,639 - data.sec_scraper - ERROR - Error fetching CIK for SBIN.NS: CIK not found for ticker SBIN.NS
-2026-08-31 21:01:55,646 - model.merton - INFO - Applied NLP Sentiment 0.00 -> Adjusted sigma_V to 0.0492
-INFO:     127.0.0.1:50048 - "GET /api/v1/risk/multi-asset/SBIN.NS HTTP/1.1" 200 OK
-2026-08-31 21:01:55,886 - api.routes.corporate - INFO - Fetching portfolio summary for default
-INFO:     127.0.0.1:50050 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-2026-08-31 21:01:55,895 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
-INFO:     127.0.0.1:50051 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50052 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
-2026-08-31 21:21:26,741 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
-INFO:     127.0.0.1:56879 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
-2026-08-31 21:22:15,846 - api.routes.corporate - INFO - Fetching portfolio summary for default
-INFO:     127.0.0.1:57465 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58936 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63537 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63538 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63539 - "OPTIONS /api/v1/news/feed HTTP/1.1" 200 OK
-2026-08-31 22:44:19,223 - api.routes.corporate - INFO - Fetching portfolio summary for default
-INFO:     127.0.0.1:63537 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-2026-08-31 22:44:19,328 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
-INFO:     127.0.0.1:63538 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63539 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59103 - "OPTIONS /api/vault/case-studies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59103 - "GET /api/vault/case-studies HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:59111 - "OPTIONS /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59112 - "OPTIONS /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59113 - "OPTIONS /api/v1/news/feed HTTP/1.1" 200 OK
-2026-09-01 16:58:48,098 - api.routes.corporate - INFO - Fetching portfolio summary for default
-INFO:     127.0.0.1:59111 - "GET /api/v1/risk/portfolio/default/summary HTTP/1.1" 200 OK
-2026-09-01 16:58:48,251 - api.routes.corporate - INFO - Generating alerts: level=None, ticker=None
-INFO:     127.0.0.1:59112 - "GET /api/v1/risk/alerts HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59113 - "GET /api/v1/news/feed HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60819 - "GET / HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:60840 - "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:60819 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:60840 - "GET /apple-touch-icon.png HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:60840 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50451 - "POST /api/v1/advanced/cva HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50453 - "POST /api/v1/advanced/cva HTTP/1.1" 200 OK

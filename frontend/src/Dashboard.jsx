@@ -120,28 +120,60 @@ export default function Dashboard() {
   const [alertsData, setAlertsData] = useState([]);
   const [newsData, setNewsData] = useState([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [marketMovers, setMarketMovers] = useState(null);
+
+  // Credit Memo State
+  const [creditMemo, setCreditMemo] = useState(null);
+  const [memoLoading, setMemoLoading] = useState(false);
+
+  // PE Fund Summary State
+  const [peFundSummary, setPeFundSummary] = useState(null);
+  const [peFundLoading, setPeFundLoading] = useState(false);
 
   React.useEffect(() => {
     if (activeTab === 'portfolio-alerts' && !portfolioSummary) {
       fetchPortfolioAlerts();
+    }
+    if (activeTab === 'private-equity' && !peFundSummary) {
+      fetchPeFund();
     }
   }, [activeTab]);
 
   const fetchPortfolioAlerts = async () => {
     setPortfolioLoading(true);
     try {
-      const [portRes, alertRes, newsRes] = await Promise.all([
+      const [portRes, alertRes, newsRes, moversRes] = await Promise.all([
         axios.get(`${API}/api/v1/risk/portfolio/default/summary`),
         axios.get(`${API}/api/v1/risk/alerts`),
-        axios.get(`${API}/api/v1/news/feed`).catch(() => null)
+        axios.get(`${API}/api/v1/news/feed`).catch(() => null),
+        axios.get(`${API}/api/v1/market/movers`).catch(() => null)
       ]);
       setPortfolioSummary(portRes.data);
       setAlertsData(alertRes.data);
       if (newsRes) setNewsData(newsRes.data);
+      if (moversRes) setMarketMovers(moversRes.data);
     } catch (e) {
       console.error(e);
     }
     setPortfolioLoading(false);
+  };
+
+  const fetchCreditMemo = async (t) => {
+    setMemoLoading(true); setCreditMemo(null);
+    try {
+      const res = await axios.get(`${API}/api/v1/analyst/memo/${t}`);
+      setCreditMemo(res.data);
+    } catch (e) { console.error(e); }
+    setMemoLoading(false);
+  };
+
+  const fetchPeFund = async () => {
+    setPeFundLoading(true);
+    try {
+      const res = await axios.get(`${API}/api/v1/pe/summary`);
+      setPeFundSummary(res.data);
+    } catch (e) { console.error(e); }
+    setPeFundLoading(false);
   };
 
   // Stress Testing State
@@ -355,6 +387,62 @@ export default function Dashboard() {
           <strong>Confidence Score:</strong> {(ensemble.confidence * 100).toFixed(1)}% <br/>
           <strong>Analysis:</strong> The ensemble model blends the structural Merton distance-to-default implied probability with the fundamental accounting-based Altman Z-Score probability proxy.
         </div>
+
+        {/* Credit Memo Button */}
+        <div className="flex gap-4 items-center">
+          <button onClick={() => fetchCreditMemo(corporateTicker.toUpperCase())} disabled={memoLoading}
+            className="px-6 py-3 border border-gold/40 text-gold font-bold uppercase tracking-widest text-sm hover:bg-gold hover:text-onyx-950 transition-colors disabled:opacity-50">
+            {memoLoading ? "Generating Memo..." : "Generate AI Credit Memo"}
+          </button>
+          {creditMemo && <span className="text-xs text-emerald-400 uppercase tracking-widest">✓ Memo Ready</span>}
+        </div>
+
+        {/* Credit Memo Viewer */}
+        {creditMemo && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-4">Investment Committee Credit Memo — {corporateTicker.toUpperCase()}</h3>
+            <div className="p-6 bg-onyx-900/30 border border-white/5 space-y-6">
+              <div>
+                <h4 className="text-xs uppercase tracking-widest text-gold/70 mb-2">Executive Summary</h4>
+                <p className="text-sm text-ivory/80 leading-relaxed">{creditMemo.executive_summary}</p>
+              </div>
+              <div>
+                <h4 className="text-xs uppercase tracking-widest text-gold/70 mb-2">Risk Assessment</h4>
+                <p className="text-sm text-ivory/80 leading-relaxed">{creditMemo.risk_assessment}</p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-3 bg-onyx-950/50 border border-white/5">
+                  <div className="text-xs text-ivory/40 mb-1">PD</div>
+                  <div className="text-lg font-mono text-red-400">{(creditMemo.key_metrics?.PD * 100)?.toFixed(3)}%</div>
+                </div>
+                <div className="text-center p-3 bg-onyx-950/50 border border-white/5">
+                  <div className="text-xs text-ivory/40 mb-1">DD</div>
+                  <div className="text-lg font-mono text-emerald-400">{creditMemo.key_metrics?.DD?.toFixed(2)}</div>
+                </div>
+                <div className="text-center p-3 bg-onyx-950/50 border border-white/5">
+                  <div className="text-xs text-ivory/40 mb-1">Z-Score</div>
+                  <div className="text-lg font-mono text-gold">{creditMemo.key_metrics?.["Z-Score"]?.toFixed(2)}</div>
+                </div>
+                <div className="text-center p-3 bg-onyx-950/50 border border-white/5">
+                  <div className="text-xs text-ivory/40 mb-1">Risk Tier</div>
+                  <div className="text-lg font-mono text-ivory">{creditMemo.key_metrics?.risk_tier}</div>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-xs uppercase tracking-widest text-gold/70 mb-2">Rating Recommendation</h4>
+                <p className="text-sm text-ivory/80 leading-relaxed">{creditMemo.rating_recommendation}</p>
+              </div>
+              <div>
+                <h4 className="text-xs uppercase tracking-widest text-gold/70 mb-2">Covenant Analysis</h4>
+                <p className="text-sm text-ivory/80 leading-relaxed">{creditMemo.covenant_analysis}</p>
+              </div>
+              <div>
+                <h4 className="text-xs uppercase tracking-widest text-gold/70 mb-2">Outlook</h4>
+                <p className="text-sm text-ivory/80 leading-relaxed">{creditMemo.outlook}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     );
   };
@@ -417,6 +505,65 @@ export default function Dashboard() {
         )}
       </div>
     </motion.div>
+    </>
+  );
+
+  // === RENDER: CVA ===
+  const [cvaLoading, setCvaLoading] = useState(false);
+  const [cvaResult, setCvaResult] = useState(null);
+  
+
+  const [batchCvaLoading, setBatchCvaLoading] = useState(false);
+  const [batchCvaResult, setBatchCvaResult] = useState(null);
+  
+  const runBatchCVA = async () => {
+    setBatchCvaLoading(true); setError(null);
+    try {
+      const res = await axios.post(`${API}/api/v1/advanced/cva/batch`);
+      setBatchCvaResult(res.data);
+    } catch (err) { setError(err.response?.data?.detail || "Failed to start batch CVA task."); }
+    finally { setBatchCvaLoading(false); }
+  };
+
+  const analyzeCVA = async (e) => {
+    e.preventDefault();
+    setCvaLoading(true); setError(null); setCvaResult(null);
+    try {
+      const res = await axios.post(`${API}/api/v1/advanced/cva`, {
+        initial_value: 1000000.0,
+        volatility: 0.20,
+        horizon_years: 5.0,
+        steps: 60
+      });
+      setCvaResult(res.data);
+    } catch (err) { setError(err.response?.data?.detail || "Failed to run CVA calculation."); }
+    finally { setCvaLoading(false); }
+  };
+
+  const renderCva = () => (
+    <>
+      <div className="mb-12"><h1 className="text-5xl font-serif mb-4">Counterparty Risk (CVA)</h1><p className="text-ivory/50">Simulate Expected Exposure and Credit Value Adjustment using GBM.</p></div>
+      
+      <div className="flex gap-4 mb-8">
+        <button onClick={analyzeCVA} disabled={cvaLoading} className="px-6 py-3 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50">
+          {cvaLoading ? "Simulating..." : "Run Single Simulation (5000 paths)"}
+        </button>
+        <button onClick={runBatchCVA} disabled={batchCvaLoading} className="px-6 py-3 border border-gold text-gold font-bold uppercase tracking-widest text-sm hover:bg-gold hover:text-onyx-950 transition-colors disabled:opacity-50">
+          {batchCvaLoading ? "Starting Batch..." : "Run Batch CVA (250 Companies)"}
+        </button>
+      </div>
+      {batchCvaResult && (
+        <div className="p-4 bg-gold/10 border border-gold/50 text-gold mb-8 max-w-xl">
+          {batchCvaResult.message} (Task ID: {batchCvaResult.task_id})
+        </div>
+      )}
+
+      {cvaResult && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <MetricCard title="Total CVA" value={`$${cvaResult.cva.toLocaleString(undefined, {maximumFractionDigits: 2})}`} icon={<Activity size={40} />} />
+          <MetricCard title="Max PFE (95%)" value={`$${Math.max(...cvaResult.pfe_95).toLocaleString(undefined, {maximumFractionDigits: 2})}`} icon={<Zap size={40} />} />
+        </div>
+      )}
     </>
   );
 
@@ -497,6 +644,52 @@ export default function Dashboard() {
   // === RENDER: PRIVATE EQUITY ===
   const renderPrivateEquity = () => (
     <>
+      {/* PE Fund Dashboard */}
+      {peFundLoading && <div className="text-center p-6 text-ivory/50">Loading fund data...</div>}
+      {peFundSummary && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 mb-12">
+          <h2 className="font-serif text-3xl text-gold">{peFundSummary.fund_name}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <MetricCard title="Total NAV" value={`$${peFundSummary.total_nav?.toFixed(0)}M`} icon={<DollarSign />} color="text-gold" />
+            <MetricCard title="Gross MOIC" value={`${peFundSummary.gross_moic?.toFixed(1)}x`} icon={<Target />} color="text-emerald-400" />
+            <MetricCard title="Net IRR" value={`${(peFundSummary.net_irr * 100)?.toFixed(1)}%`} icon={<Activity />} color="text-emerald-400" />
+            <MetricCard title="Active Companies" value={peFundSummary.companies?.filter(c => c.status === 'active').length} icon={<Building2 />} />
+            <MetricCard title="Covenant Alerts" value={peFundSummary.alert_count} icon={<AlertTriangle />} color={peFundSummary.alert_count > 0 ? "text-red-400" : "text-emerald-400"} />
+          </div>
+
+          <h3 className="text-sm font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-4">Portfolio Companies — Covenant Monitor</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {peFundSummary.companies?.map((c, i) => (
+              <div key={i} className={`p-5 bg-onyx-900/30 border ${c.covenant_headroom !== undefined && c.covenant_headroom < 0.1 ? 'border-red-500/50' : 'border-white/5'}`}>
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <span className="font-mono font-bold text-lg">{c.name}</span>
+                    <span className="ml-3 text-xs uppercase tracking-widest text-ivory/40">{c.sector}</span>
+                  </div>
+                  {c.status === 'exited' ? (
+                    <span className="text-[10px] uppercase tracking-widest bg-emerald-900/30 text-emerald-400 px-2 py-1">Exited</span>
+                  ) : c.covenant_headroom !== undefined && c.covenant_headroom < 0.1 ? (
+                    <span className="text-[10px] uppercase tracking-widest bg-red-900/30 text-red-400 px-2 py-1 animate-pulse">⚠ Covenant Breach Risk</span>
+                  ) : (
+                    <span className="text-[10px] uppercase tracking-widest bg-onyx-950 text-ivory/40 px-2 py-1">Active</span>
+                  )}
+                </div>
+                {c.status === 'active' && (
+                  <div className="grid grid-cols-4 gap-3 text-center">
+                    <div><div className="text-[10px] text-ivory/40">Debt Coverage</div><div className="font-mono text-sm">{c.debt_coverage?.toFixed(2)}x</div></div>
+                    <div><div className="text-[10px] text-ivory/40">Cov. Headroom</div><div className={`font-mono text-sm ${c.covenant_headroom < 0.1 ? 'text-red-400' : 'text-emerald-400'}`}>{(c.covenant_headroom * 100)?.toFixed(0)}%</div></div>
+                    <div><div className="text-[10px] text-ivory/40">Implied PD</div><div className="font-mono text-sm text-red-400">{(c.implied_pd * 100)?.toFixed(2)}%</div></div>
+                    <div><div className="text-[10px] text-ivory/40">EV ($M)</div><div className="font-mono text-sm">{c.equity_value?.toFixed(0)}</div></div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Individual Company Analysis */}
+      <h3 className="text-sm font-bold uppercase tracking-widest text-gold border-b border-white/5 pb-4 mb-6">Analyze Individual Company</h3>
       <form onSubmit={handlePeSearch} className="relative max-w-xl mb-12">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-ivory/30"><Search size={20} /></div>
         <input type="text" list="pe-list" className="w-full bg-onyx-900 border border-white/10 rounded-none py-4 pl-12 pr-32 text-lg focus:outline-none focus:border-gold transition-colors text-ivory uppercase"
@@ -647,6 +840,43 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* Market Movers */}
+        {marketMovers && (
+          <div>
+            <h2 className="font-serif text-3xl mb-6 flex items-center gap-3"><TrendingDown className="text-gold" /> Market Movers</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 bg-onyx-900/30 border border-white/5">
+                <h4 className="text-xs uppercase tracking-widest text-emerald-400 mb-4">Top Gainers</h4>
+                <div className="space-y-3">
+                  {(marketMovers.top_gainers || []).map((m, i) => (
+                    <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
+                      <span className="font-mono font-bold">{m.ticker}</span>
+                      <div className="text-right">
+                        <span className="text-ivory/60 mr-4">${m.current_price?.toFixed(2)}</span>
+                        <span className="text-emerald-400 font-mono">+{m.change_pct?.toFixed(2)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6 bg-onyx-900/30 border border-white/5">
+                <h4 className="text-xs uppercase tracking-widest text-red-400 mb-4">Top Losers</h4>
+                <div className="space-y-3">
+                  {(marketMovers.top_losers || []).map((m, i) => (
+                    <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
+                      <span className="font-mono font-bold">{m.ticker}</span>
+                      <div className="text-right">
+                        <span className="text-ivory/60 mr-4">${m.current_price?.toFixed(2)}</span>
+                        <span className="text-red-400 font-mono">{m.change_pct?.toFixed(2)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Portfolio Summary Section */}
         {portfolioSummary && (
           <div>
@@ -714,7 +944,8 @@ export default function Dashboard() {
     { key: 'corporate', label: 'Corporate EWS' },
     { key: 'stress-testing', label: 'Stress Testing' },
     { key: 'retail', label: 'Retail Credit' },
-    { key: 'private-equity', label: 'Private Equity' }
+    { key: 'private-equity', label: 'Private Equity' },
+    { key: 'cva', label: 'Counterparty (CVA)' }
   ];
 
   return (
@@ -769,6 +1000,7 @@ export default function Dashboard() {
               {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
               {renderRetail()}
             </>)}
+            {activeTab === 'cva' && renderCva()}
             {activeTab === 'private-equity' && (<>
               <div className="mb-12"><h1 className="text-5xl font-serif mb-4">Private Equity Risk</h1><p className="text-ivory/50">Moody's Private Firm Model with GICS-matched peer comps, Hamada-unlevered vol, and LBO debt schedule analysis.</p></div>
               {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
