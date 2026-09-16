@@ -230,6 +230,15 @@ export default function Dashboard() {
   };
 
   // === RENDER: MULTI-ASSET ===
+  const [liveMarket, setLiveMarket] = useState(null);
+
+  // Fetch live market data when result loads
+  React.useEffect(() => {
+    if (result && result.ticker) {
+      axios.get(`${API}/api/v1/market/live/${result.ticker}`).then(r => setLiveMarket(r.data)).catch(() => {});
+    }
+  }, [result]);
+
   const renderMultiAsset = () => {
     if (!result) return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8">
@@ -250,13 +259,151 @@ export default function Dashboard() {
     );
     const { asset_type, metrics, risk_tier } = result;
     if (asset_type === "EQUITY") {
+      const sentimentLabel = metrics.sentiment_score > 0.15 ? "Bullish" : metrics.sentiment_score < -0.15 ? "Bearish" : "Neutral";
+      const sentimentColor = metrics.sentiment_score > 0.15 ? "text-emerald-400" : metrics.sentiment_score < -0.15 ? "text-red-400" : "text-amber-400";
+
+      // Prepare chart data
+      const assetChartData = metrics.asset_series ? Object.entries(metrics.asset_series)
+        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+        .map(([day, val]) => ({ day: parseInt(day), value: val / 1e9 })) : [];
+
+      const ddChartData = metrics.dd_timeseries ? Object.entries(metrics.dd_timeseries)
+        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+        .map(([day, val]) => ({ day: parseInt(day), dd: val })) : [];
+
+      const pdTermData = metrics.pd_term_structure ? Object.entries(metrics.pd_term_structure)
+        .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+        .map(([horizon, pd]) => ({ horizon: `${horizon}Y`, pd: pd * 100 })) : [];
+
       return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+          {/* Live Market Ticker Bar */}
+          {liveMarket && (
+            <div className="flex items-center gap-6 p-4 bg-onyx-900/30 border border-white/5 overflow-x-auto">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-2xl font-bold text-gold">{result.ticker}</span>
+                <span className="text-3xl font-light font-serif">${liveMarket.current_price?.toFixed(2)}</span>
+                <span className={`font-mono text-sm ${liveMarket.change_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {liveMarket.change_pct >= 0 ? '▲' : '▼'} {Math.abs(liveMarket.change_pct)?.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex gap-6 text-xs text-ivory/40 ml-auto">
+                <div><span className="block text-ivory/60">Mkt Cap</span>${(liveMarket.market_cap / 1e9)?.toFixed(0)}B</div>
+                <div><span className="block text-ivory/60">52W H/L</span>${liveMarket.fifty_two_week_high?.toFixed(0)} / ${liveMarket.fifty_two_week_low?.toFixed(0)}</div>
+                <div><span className="block text-ivory/60">Beta</span>{liveMarket.beta?.toFixed(2)}</div>
+                <div><span className="block text-ivory/60">P/E</span>{liveMarket.pe_ratio?.toFixed(1) || '—'}</div>
+                <div><span className="block text-ivory/60">Volume</span>{(liveMarket.volume / 1e6)?.toFixed(1)}M</div>
+              </div>
+            </div>
+          )}
+
+          {/* Primary Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <MetricCard title="Distance to Default (DD)" value={metrics.DD_rn?.toFixed(2)} icon={<Target />} color="text-emerald-400" />
-            <MetricCard title="Prob. of Default (1Y)" value={`${(metrics.PD_rn * 100).toFixed(2)}%`} icon={<AlertTriangle />} color="text-red-400" />
-            <MetricCard title="Asset Volatility" value={`${(metrics.sigma_V * 100).toFixed(2)}%`} icon={<Activity />} />
-            <MetricCard title="FinBERT Sentiment" value={metrics.sentiment_score !== undefined ? metrics.sentiment_score.toFixed(2) : "N/A"} icon={<Activity />} color={metrics.sentiment_score < 0 ? "text-red-400" : "text-emerald-400"} />
+            <MetricCard title="Prob. of Default (1Y)" value={`${(metrics.PD_rn * 100).toFixed(4)}%`} icon={<AlertTriangle />} color="text-red-400" />
+            <MetricCard title="Asset Volatility (σ_V)" value={`${(metrics.sigma_V * 100).toFixed(2)}%`} icon={<Activity />} />
+            <MetricCard title="FinBERT Sentiment" value={`${metrics.sentiment_score?.toFixed(3)} (${sentimentLabel})`} icon={<BarChart3 />} color={sentimentColor} />
+          </div>
+
+          {/* Secondary Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <MetricCard title="Implied Asset Value" value={`$${(metrics.V_current / 1e9)?.toFixed(1)}B`} icon={<DollarSign />} color="text-gold" />
+            <MetricCard title="Default Point (D)" value={`$${(metrics.D / 1e9)?.toFixed(2)}B`} icon={<Shield />} />
+            <MetricCard title="Calibrated PD" value={`${(metrics.PD_calibrated * 100)?.toFixed(4)}%`} icon={<Calculator />} color="text-amber-400" />
+            <MetricCard title="VK Iterations" value={metrics.iterations} icon={<Zap />} />
+          </div>
+
+          {/* Risk-Neutral vs Real-World comparison */}
+          <div className="p-6 bg-onyx-900/30 border border-white/5">
+            <h4 className="text-xs uppercase tracking-widest text-gold mb-4">Risk-Neutral vs Real-World Comparison</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="text-center"><div className="text-xs text-ivory/40 mb-1">DD (Risk-Neutral)</div><div className="text-xl font-mono text-emerald-400">{metrics.DD_rn?.toFixed(2)}</div></div>
+              <div className="text-center"><div className="text-xs text-ivory/40 mb-1">DD (Real-World)</div><div className="text-xl font-mono text-blue-400">{metrics.DD_rw?.toFixed(2)}</div></div>
+              <div className="text-center"><div className="text-xs text-ivory/40 mb-1">PD (Risk-Neutral)</div><div className="text-xl font-mono text-red-400">{(metrics.PD_rn * 100)?.toFixed(6)}%</div></div>
+              <div className="text-center"><div className="text-xs text-ivory/40 mb-1">PD (Real-World)</div><div className="text-xl font-mono text-amber-400">{(metrics.PD_rw * 100)?.toFixed(6)}%</div></div>
+            </div>
+            <div className="mt-4 text-center text-xs text-ivory/30">Real-World Drift (μ): {(metrics.mu_rw * 100)?.toFixed(2)}% | Asset/Debt Cushion: {((metrics.V_current - metrics.D) / metrics.V_current * 100)?.toFixed(1)}%</div>
+          </div>
+
+          {/* Implied Asset Value Chart */}
+          {assetChartData.length > 0 && (
+            <div className="p-6 bg-onyx-900/30 border border-white/5">
+              <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">Implied Asset Value ($B) — Merton Framework</h4>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={assetChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                    <XAxis dataKey="day" stroke="#ffffff50" tick={{fontSize: 10}} />
+                    <YAxis stroke="#ffffff50" tick={{fontSize: 10}} domain={['auto', 'auto']} />
+                    <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} formatter={(v) => [`$${v.toFixed(1)}B`, 'Asset Value']} />
+                    <Area type="monotone" dataKey="value" stroke="#d4af37" fill="rgba(212,175,55,0.1)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* DD Trajectory */}
+          {ddChartData.length > 0 && (
+            <div className="p-6 bg-onyx-900/30 border border-white/5">
+              <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">Distance-to-Default (DD) Trajectory — 1 Year</h4>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={ddChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                    <XAxis dataKey="day" stroke="#ffffff50" tick={{fontSize: 10}} />
+                    <YAxis stroke="#ffffff50" tick={{fontSize: 10}} domain={['auto', 'auto']} />
+                    <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} />
+                    <Line type="monotone" dataKey="dd" stroke="#10b981" strokeWidth={2} dot={false} name="DD" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* PD Term Structure */}
+          {pdTermData.length > 0 && (
+            <div className="p-6 bg-onyx-900/30 border border-white/5">
+              <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">PD Term Structure — Cumulative Default Probability</h4>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={pdTermData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                    <XAxis dataKey="horizon" stroke="#ffffff50" tick={{fontSize: 11}} />
+                    <YAxis stroke="#ffffff50" tick={{fontSize: 10}} />
+                    <Tooltip contentStyle={{backgroundColor: '#0a0a0a', borderColor: '#ffffff20'}} formatter={(v) => [`${v.toFixed(6)}%`, 'PD']} />
+                    <Bar dataKey="pd" fill="#d4af37" name="PD (%)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* NLP Sentiment Gauge */}
+          <div className="p-6 bg-onyx-900/30 border border-white/5">
+            <h4 className="text-xs uppercase tracking-widest text-ivory/50 mb-4">FinBERT SEC 8-K Sentiment Analysis</h4>
+            <div className="flex items-center gap-8">
+              <div className="flex-1">
+                <div className="h-4 bg-onyx-950 rounded-full overflow-hidden">
+                  <div className={`h-full transition-all duration-1000 ${metrics.sentiment_score >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`}
+                    style={{width: `${Math.min(Math.abs(metrics.sentiment_score) * 200 + 50, 100)}%`, marginLeft: metrics.sentiment_score < 0 ? 'auto' : 0}} />
+                </div>
+                <div className="flex justify-between text-[10px] text-ivory/30 mt-1">
+                  <span>Bearish</span><span>Neutral</span><span>Bullish</span>
+                </div>
+              </div>
+              <div className="text-center min-w-[100px]">
+                <div className={`text-3xl font-serif ${sentimentColor}`}>{metrics.sentiment_score?.toFixed(3)}</div>
+                <div className={`text-xs uppercase tracking-widest ${sentimentColor}`}>{sentimentLabel}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Methodology */}
+          <div className="p-6 bg-onyx-900/50 border border-white/5 text-sm text-ivory/70 leading-relaxed">
+            <strong>Merton-KMV Framework:</strong> The implied asset value (V = ${(metrics.V_current / 1e9)?.toFixed(1)}B) is derived via iterative Vasicek-Kealhofer calibration ({metrics.iterations} iterations) on market equity and balance sheet debt (D = ${(metrics.D / 1e9)?.toFixed(2)}B).
+            The Distance-to-Default measures how many standard deviations the asset value stands above the default barrier.<br/>
+            <strong>FinBERT NLP:</strong> Sentiment score ({metrics.sentiment_score?.toFixed(3)}) is computed from the latest SEC 8-K filing text using the HuggingFace FinBERT transformer model, calibrated on financial discourse.
           </div>
         </motion.div>
       );
