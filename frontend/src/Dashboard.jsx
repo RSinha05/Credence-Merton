@@ -827,7 +827,7 @@ export default function Dashboard() {
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-ivory/30"><Zap size={20} /></div>
         <input type="text" list="asset-list" className="w-full bg-onyx-900 border border-white/10 rounded-none py-4 pl-12 pr-32 text-lg focus:outline-none focus:border-gold transition-colors text-ivory uppercase"
           placeholder="E.G. AAPL, TSLA, NVDA" value={stressTicker} onChange={(e) => setStressTicker(e.target.value)} />
-        <button type="submit" disabled={stressLoading} className="absolute inset-y-0 right-0 px-6 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50">
+        <button id="stress-analyze-btn" type="submit" disabled={stressLoading} className="absolute inset-y-0 right-0 px-6 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50">
           {stressLoading ? "..." : "Search"}</button>
       </form>
       {error && <div className="p-4 bg-red-900/20 border border-red-500/50 text-red-200 mb-8 max-w-xl">{error}</div>}
@@ -904,6 +904,19 @@ export default function Dashboard() {
           <Zap size={48} className="mb-4 opacity-50" />
           <p className="text-xl font-serif">Enter a ticker to run CCAR/EBA stress scenarios.</p>
           <p className="text-sm mt-2 text-ivory/20">Covers Baseline, Adverse, Severely Adverse, EBA, Pandemic, and Rate Hike shocks.</p>
+        </div>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-gold mb-6 border-b border-white/5 pb-4 mt-8">Curated Global Equities</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {ASSET_UNIVERSE.filter(a => a.type === 'EQUITY').map((asset) => (
+            <button key={asset.ticker} onClick={() => { setStressTicker(asset.ticker); setTimeout(() => document.getElementById("stress-analyze-btn").click(), 50); }}
+              className="text-left p-4 bg-onyx-900/40 border border-white/5 hover:border-gold/30 hover:bg-onyx-900 transition-all group">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-mono text-sm text-ivory group-hover:text-gold transition-colors">{asset.ticker}</span>
+                <span className="text-[10px] uppercase tracking-widest text-ivory/40 bg-onyx-950 px-2 py-1 rounded-sm">EQ</span>
+              </div>
+              <div className="text-xs text-ivory/50 truncate">{asset.name}</div>
+            </button>
+          ))}
         </div>
       )}
     </>
@@ -1234,6 +1247,7 @@ export default function Dashboard() {
       </nav>
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-8 flex flex-col">
+        <datalist id="asset-list">{sortedAssets.map(a => <option key={a.ticker} value={a.ticker}>{a.name}</option>)}</datalist>
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             {activeTab === 'portfolio-alerts' && renderPortfolioAlerts()}
@@ -1243,7 +1257,6 @@ export default function Dashboard() {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-ivory/30"><Search size={20} /></div>
                 <input type="text" list="asset-list" className="w-full bg-onyx-900 border border-white/10 rounded-none py-4 pl-12 pr-32 text-lg focus:outline-none focus:border-gold transition-colors text-ivory uppercase"
                   placeholder="E.G. AAPL, ^TNX, VOO" value={ticker} onChange={(e) => setTicker(e.target.value)} />
-                <datalist id="asset-list">{sortedAssets.map(a => <option key={a.ticker} value={a.ticker}>{a.name}</option>)}</datalist>
                 <button id="analyze-btn" type="submit" disabled={loading} className="absolute inset-y-0 right-0 px-6 bg-gold text-onyx-950 font-bold uppercase tracking-widest text-sm hover:bg-white transition-colors disabled:opacity-50">
                   {loading ? "..." : "Search"}</button>
               </form>
